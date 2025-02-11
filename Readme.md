@@ -1,7 +1,7 @@
 # Проект «Большое путешествие»
 
 * Студент: [Амаль Габидов](https://up.htmlacademy.ru/ecmascript-individual/2/user/2567667).
-* Наставник: `Неизвестно`.
+* Наставник: [Давид Чачанов](https://htmlacademy.ru/profile/id2355549).
 
 ---
 
