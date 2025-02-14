@@ -1,0 +1,37 @@
+import SortView from '../view/sort-view.js';
+import FilterView from '../view/filter-view.js';
+import EventPointView from '../view/event-point-view.js';
+import EditEventFormView from '../view/edit-event-form-view.js';
+import EventFormView from '../view/event-form-view.js';
+import TripInfoView from '../view/trip-info-view.js';
+import { RenderPosition, render } from '../render.js';
+
+export default class TripPresenter {
+  constructor({ headerContainer, mainContainer, controlsFilter }) {
+    this.headerContainer = headerContainer;
+    this.mainContainer = mainContainer;
+    this.controlsFilter = controlsFilter;
+  }
+
+  init() {
+    // Отрисовка информации о маршруте
+    render(new TripInfoView(), this.headerContainer, RenderPosition.AFTERBEGIN);
+
+    // Отрисовка фильтров
+    render(new FilterView(), this.controlsFilter, RenderPosition.BEFOREEND);
+
+    // Отрисовка сортировки
+    render(new SortView(), this.mainContainer, RenderPosition.BEFOREEND);
+
+    // Отрисовка формы редактирования
+    render(new EditEventFormView(), this.mainContainer, RenderPosition.BEFOREEND);
+
+    // Отрисовка формы создания
+    render(new EventFormView(), this.mainContainer, RenderPosition.BEFOREEND);
+
+    // Отрисовка 3 точек маршрута
+    for (let i = 0; i < 3; i++) {
+      render(new EventPointView(), this.mainContainer, RenderPosition.BEFOREEND);
+    }
+  }
+}
