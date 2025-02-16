@@ -4,6 +4,7 @@ import EventPointView from '../view/event-point-view.js';
 import EditEventFormView from '../view/edit-event-form-view.js';
 import EventFormView from '../view/event-form-view.js';
 import TripInfoView from '../view/trip-info-view.js';
+import ContentList from '../view/content-list.js';
 import { RenderPosition, render } from '../render.js';
 
 export default class TripPresenter {
@@ -23,15 +24,19 @@ export default class TripPresenter {
     // Отрисовка сортировки
     render(new SortView(), this.mainContainer, RenderPosition.BEFOREEND);
 
-    // Отрисовка формы редактирования
-    render(new EditEventFormView(), this.mainContainer, RenderPosition.BEFOREEND);
+    const contentList = new ContentList();
 
-    // Отрисовка формы создания
-    render(new EventFormView(), this.mainContainer, RenderPosition.BEFOREEND);
+    render(contentList, this.mainContainer, RenderPosition.BEFOREEND);
 
     // Отрисовка 3 точек маршрута
     for (let i = 0; i < 3; i++) {
-      render(new EventPointView(), this.mainContainer, RenderPosition.BEFOREEND);
+      render(new EventPointView(), contentList.getElement(), RenderPosition.BEFOREEND);
     }
+
+    // Отрисовка формы создания
+    render(new EventFormView(), contentList.getElement(), RenderPosition.AFTERBEGIN);
+
+    // Отрисовка формы редактирования
+    render(new EditEventFormView(), contentList.getElement(), RenderPosition.AFTERBEGIN);
   }
 }
