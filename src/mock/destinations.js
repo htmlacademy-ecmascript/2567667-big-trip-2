@@ -23,7 +23,7 @@ const mockDestinations = [
   },
   {
     id: 3,
-    name: 'bfa5cb75-a1fe-4b77-a83c-0e528e910e06',
+    name: 'Chamonix',
     description: 'Aliquam erat volutpat. Nunc fermentum tortor ac porta dapibus. In rutrum ac purus sit amet tempus.',
     pictures: [
       {
