@@ -35,8 +35,5 @@ export default class TripPresenter {
 
     // Отрисовка формы создания
     render(new EventFormView(), contentList.getElement(), RenderPosition.AFTERBEGIN);
-
-    // Отрисовка формы редактирования
-    render(new EditEventFormView(), contentList.getElement(), RenderPosition.AFTERBEGIN);
   }
 }
