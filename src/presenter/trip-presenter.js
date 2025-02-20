@@ -1,7 +1,7 @@
 import SortView from '../view/sort-view.js';
 import FilterView from '../view/filter-view.js';
 import EventPointView from '../view/event-point-view.js';
-import EventFormView from '../view/event-form-view.js';
+import EditEventFormView from '../view/edit-event-form-view.js';
 import TripInfoView from '../view/trip-info-view.js';
 import ContentList from '../view/content-list.js';
 import { RenderPosition, render } from '../render.js';
@@ -32,7 +32,7 @@ export default class TripPresenter {
       render(new EventPointView(), contentList.getElement(), RenderPosition.BEFOREEND);
     }
 
-    // Отрисовка формы создания
-    render(new EventFormView(), contentList.getElement(), RenderPosition.AFTERBEGIN);
+    // Отрисовка формы редактирования
+    render(new EditEventFormView(), contentList.getElement(), RenderPosition.AFTERBEGIN);
   }
 }
