@@ -1,7 +1,6 @@
 import SortView from '../view/sort-view.js';
 import FilterView from '../view/filter-view.js';
 import EventPointView from '../view/event-point-view.js';
-import EditEventFormView from '../view/edit-event-form-view.js';
 import EventFormView from '../view/event-form-view.js';
 import TripInfoView from '../view/trip-info-view.js';
 import ContentList from '../view/content-list.js';
