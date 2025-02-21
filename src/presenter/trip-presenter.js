@@ -7,13 +7,17 @@ import ContentList from '../view/content-list.js';
 import { RenderPosition, render } from '../render.js';
 
 export default class TripPresenter {
-  constructor({ headerContainer, mainContainer, controlsFilter }) {
+  constructor({ headerContainer, mainContainer, controlsFilter, pointsModel }) {
     this.headerContainer = headerContainer;
     this.mainContainer = mainContainer;
     this.controlsFilter = controlsFilter;
+    this.pointsModel = pointsModel;
   }
 
   init() {
+    // const points = this.pointsModel.getPoints();
+    // render (points, this.pointsModel, RenderPosition.AFTERBEGIN);
+
     // Отрисовка информации о маршруте
     render(new TripInfoView(), this.headerContainer, RenderPosition.AFTERBEGIN);
 

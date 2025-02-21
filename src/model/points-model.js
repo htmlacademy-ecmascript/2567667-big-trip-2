@@ -17,21 +17,23 @@ export default class PointsModel {
     return this.offers;
   }
 
+  getAllOffers() {
+    return this.offers.flatMap((offer) => offer.offers);
+  }
+
   getDestinations() {
     return this.destinations;
   }
 
   getOfferByType(type) {
-    return this.offers.find((offer) => offer.type === type);
+    return this.offers.find((offer) => offer.type === type)?.offers || [];
   }
 
   getOfferById(type, itemIds) {
-    const offerType = this.getOfferByType(type);
-    return offerType ? offerType.offers.filter((offer) => itemIds.includes(offer.id)) : [];
+    return this.getOfferByType(type).filter((offer) => itemIds.includes(offer.id));
   }
 
   getDestinationById(id) {
-    return this.destinations.find((destination) => destination.id === id);
+    return this.destinations.find((destination) => destination.id === id) || null;
   }
 }
-
