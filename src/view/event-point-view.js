@@ -1,14 +1,21 @@
 import { createElement } from '../render.js';
 
-function createEventPointTemplate() {
-  return `
+export default class EventPointView {
+  constructor({ point, offers, destination }) {
+    this.point = point;
+    this.offers = offers;
+    this.destination = destination;
+  }
+
+  getTemplate() {
+    return `
     <li class="trip-events__item">
               <div class="event">
                 <time class="event__date" datetime="2019-03-18">MAR 18</time>
                 <div class="event__type">
-                  <img class="event__type-icon" width="42" height="42" src="img/icons/drive.png" alt="Event type icon">
+                  <img class="event__type-icon" width="42" height="42" src="img/icons/${this.point.type}.png" alt="Event type icon">
                 </div>
-                <h3 class="event__title">Drive Chamonix</h3>
+                <h3 class="event__title">${this.point.type} ${this.destination ? this.destination.name : ''}</h3>
                 <div class="event__schedule">
                   <p class="event__time">
                     <time class="event__start-time" datetime="2019-03-18T14:30">14:30</time>
@@ -40,11 +47,6 @@ function createEventPointTemplate() {
               </div>
             </li>
   `;
-}
-
-export default class EventPointView {
-  getTemplate() {
-    return createEventPointTemplate();
   }
 
   getElement() {

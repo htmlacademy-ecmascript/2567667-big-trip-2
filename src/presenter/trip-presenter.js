@@ -15,8 +15,8 @@ export default class TripPresenter {
   }
 
   init() {
-    // const points = this.pointsModel.getPoints();
-    // render (points, this.pointsModel, RenderPosition.AFTERBEGIN);
+    // Получаем данные из модели
+    const points = this.pointsModel.getPoints();
 
     // Отрисовка информации о маршруте
     render(new TripInfoView(), this.headerContainer, RenderPosition.AFTERBEGIN);
@@ -27,16 +27,35 @@ export default class TripPresenter {
     // Отрисовка сортировки
     render(new SortView(), this.mainContainer, RenderPosition.BEFOREEND);
 
+    // Контейнер для точек маршрута
     const contentList = new ContentList();
-
     render(contentList, this.mainContainer, RenderPosition.BEFOREEND);
 
-    // Отрисовка 3 точек маршрута
-    for (let i = 0; i < 3; i++) {
-      render(new EventPointView(), contentList.getElement(), RenderPosition.BEFOREEND);
+    // Отрисовка всех точек маршрута (и формы редактирования)
+    points.forEach((point, index) => {
+      this.renderPoint(contentList, point, index === 0); // Первый элемент - форма редактирования
+    });
+  }
+
+  renderPoint(contentList, point, isEditForm = false) {
+    if (isEditForm) {
+      // Отрисовываем EditEventFormView для первой точки
+      const editFormComponent = new EditEventFormView({
+        point,
+        offers: this.pointsModel.getOfferByType(point.type),
+        destination: this.pointsModel.getDestinationById(point.destination),
+      });
+
+      render(editFormComponent, contentList.getElement(), RenderPosition.BEFOREEND);
     }
 
-    // Отрисовка формы редактирования
-    render(new EditEventFormView(), contentList.getElement(), RenderPosition.AFTERBEGIN);
+    // Отрисовываем EventPointView для всех точек
+    const pointComponent = new EventPointView({
+      point,
+      offers: this.pointsModel.getOfferByType(point.type),
+      destination: this.pointsModel.getDestinationById(point.destination),
+    });
+
+    render(pointComponent, contentList.getElement(), RenderPosition.BEFOREEND);
   }
 }

@@ -17,20 +17,12 @@ export default class PointsModel {
     return this.offers;
   }
 
-  getAllOffers() {
-    return this.offers.flatMap((offer) => offer.offers);
-  }
-
   getDestinations() {
     return this.destinations;
   }
 
   getOfferByType(type) {
     return this.offers.find((offer) => offer.type === type)?.offers || [];
-  }
-
-  getOfferById(type, itemIds) {
-    return this.getOfferByType(type).filter((offer) => itemIds.includes(offer.id));
   }
 
   getDestinationById(id) {
