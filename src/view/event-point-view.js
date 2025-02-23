@@ -1,5 +1,6 @@
 import { createElement } from '../render.js';
 import dayjs from 'dayjs';
+import { calculateDuration } from '../utils.js';
 
 function createEventPointTemplate(point, destination, offers) {
   return `
@@ -16,6 +17,7 @@ function createEventPointTemplate(point, destination, offers) {
             —
             <time class="event__end-time" datetime="${point.dateTo}">${dayjs(point.dateTo).format('HH:mm')}</time>
           </p>
+          <p class="event__duration">${calculateDuration(point.dateFrom, point.dateTo)}</p>
         </div>
         <p class="event__price">
           &euro; <span class="event__price-value">${point.basePrice}</span>
