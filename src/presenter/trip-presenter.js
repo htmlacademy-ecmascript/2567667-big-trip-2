@@ -42,6 +42,6 @@ export default class TripPresenter {
     });
 
     // Отрисовка формы редактирования
-    render(new EditEventFormView(), contentList.getElement(), RenderPosition.AFTERBEGIN);
+    render(new EditEventFormView(points[0], offers, destinations), contentList.getElement(), RenderPosition.AFTERBEGIN);
   }
 }
