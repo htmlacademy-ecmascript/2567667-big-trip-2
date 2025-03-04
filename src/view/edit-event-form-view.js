@@ -56,6 +56,9 @@ function createEditEventFormTemplate(point, offers, destinations) {
 
           <button class="event__save-btn btn btn--blue" type="submit">Save</button>
           <button class="event__reset-btn" type="reset">Cancel</button>
+          <button class="event__rollup-btn" type="button">
+            <span class="visually-hidden">Open event</span>
+          </button>
         </header>
 
         <section class="event__details">
@@ -80,17 +83,27 @@ function createEditEventFormTemplate(point, offers, destinations) {
 }
 export default class EditEventFormView extends AbstractView {
   #point = null;
-  #destinations = null;
   #offers = null;
+  #destinations = null;
+  #onFormSubmit = null;
 
-  constructor({point, offers, destinations}) {
+  constructor({ point, offers, destinations, onFormSubmit }) {
     super();
     this.#point = point;
     this.#offers = offers;
     this.#destinations = destinations;
+    this.#onFormSubmit = onFormSubmit;
+
+    this.element.querySelector('form')
+      .addEventListener('submit', this.#handleFormSubmit);
   }
 
   get template() {
     return createEditEventFormTemplate(this.#point, this.#offers, this.#destinations);
   }
+
+  #handleFormSubmit = (evt) => {
+    evt.preventDefault();
+    this.#onFormSubmit();
+  };
 }

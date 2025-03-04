@@ -5,7 +5,7 @@ import EditEventFormView from '../view/edit-event-form-view.js';
 import TripInfoView from '../view/trip-info-view.js';
 import ContentList from '../view/content-list.js';
 import PointModel from '../model/points-model.js';
-import { render, RenderPosition } from '../framework/render.js';
+import { render, replace, RenderPosition } from '../framework/render.js';
 
 export default class TripPresenter {
   #headerContainer = null;
@@ -43,12 +43,43 @@ export default class TripPresenter {
       const destination = destinations.find((dest) => dest.id === point.destination);
       const availableOffers = offers.find((offer) => offer.type === point.type)?.offers || [];
 
-      render(new EventPointView({ point, destination, offers: availableOffers }), contentList.element, RenderPosition.BEFOREEND);
-    });
+      const pointComponent = new EventPointView({
+        point,
+        destination,
+        offers: availableOffers,
+        onEditClick: replaceCardToForm
+      });
 
-    // Отрисовка формы редактирования
-    if (points.length > 0) {
-      render(new EditEventFormView({ point: points[0], offers, destinations }), contentList.element, RenderPosition.AFTERBEGIN);
-    }
+      const pointEditComponent = new EditEventFormView({
+        point,
+        offers,
+        destinations,
+        onFormSubmit: replaceFormToCard,
+        onEditClose: replaceFormToCard
+      });
+
+      function replaceCardToForm() {
+        replace(pointEditComponent, pointComponent);
+        document.addEventListener('keydown', escKeyDownHandler);
+
+        // Добавляем обработчик клика по "стрелке вверх"
+        pointEditComponent.element.querySelector('.event__rollup-btn')
+          .addEventListener('click', replaceFormToCard);
+      }
+
+      function replaceFormToCard() {
+        replace(pointComponent, pointEditComponent);
+        document.removeEventListener('keydown', escKeyDownHandler);
+      }
+
+      function escKeyDownHandler(evt) {
+        if (evt.key === 'Escape') {
+          evt.preventDefault();
+          replaceFormToCard();
+        }
+      }
+
+      render(pointComponent, contentList.element, RenderPosition.BEFOREEND);
+    });
   }
 }
