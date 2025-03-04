@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import dayjs from 'dayjs';
 
 function createEditEventFormTemplate(point, offers, destinations) {
@@ -78,25 +78,19 @@ function createEditEventFormTemplate(point, offers, destinations) {
     </li>
   `;
 }
-export default class EditEventFormView {
-  constructor(point, offers, destinations) {
-    this.point = point;
-    this.offers = offers;
-    this.destinations = destinations;
+export default class EditEventFormView extends AbstractView {
+  #point = null;
+  #destinations = null;
+  #offers = null;
+
+  constructor({point, offers, destinations}) {
+    super();
+    this.#point = point;
+    this.#offers = offers;
+    this.#destinations = destinations;
   }
 
-  getTemplate() {
-    return createEditEventFormTemplate(this.point, this.offers, this.destinations);
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
+  get template() {
+    return createEditEventFormTemplate(this.#point, this.#offers, this.#destinations);
   }
 }
