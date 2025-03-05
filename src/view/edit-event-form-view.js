@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import dayjs from 'dayjs';
 
 function createEditEventFormTemplate(point, offers, destinations) {
@@ -56,6 +56,9 @@ function createEditEventFormTemplate(point, offers, destinations) {
 
           <button class="event__save-btn btn btn--blue" type="submit">Save</button>
           <button class="event__reset-btn" type="reset">Cancel</button>
+          <button class="event__rollup-btn" type="button">
+            <span class="visually-hidden">Open event</span>
+          </button>
         </header>
 
         <section class="event__details">
@@ -78,25 +81,29 @@ function createEditEventFormTemplate(point, offers, destinations) {
     </li>
   `;
 }
-export default class EditEventFormView {
-  constructor(point, offers, destinations) {
-    this.point = point;
-    this.offers = offers;
-    this.destinations = destinations;
+export default class EditEventFormView extends AbstractView {
+  #point = null;
+  #offers = null;
+  #destinations = null;
+  #onFormSubmit = null;
+
+  constructor({ point, offers, destinations, onFormSubmit }) {
+    super();
+    this.#point = point;
+    this.#offers = offers;
+    this.#destinations = destinations;
+    this.#onFormSubmit = onFormSubmit;
+
+    this.element.querySelector('form')
+      .addEventListener('submit', this.#handleFormSubmit);
   }
 
-  getTemplate() {
-    return createEditEventFormTemplate(this.point, this.offers, this.destinations);
+  get template() {
+    return createEditEventFormTemplate(this.#point, this.#offers, this.#destinations);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
-  }
+  #handleFormSubmit = (evt) => {
+    evt.preventDefault();
+    this.#onFormSubmit();
+  };
 }
