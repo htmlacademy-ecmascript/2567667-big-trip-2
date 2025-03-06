@@ -59,8 +59,6 @@ export default class TripPresenter {
     function replaceCardToForm() {
       replace(pointEditComponent, pointComponent);
       document.addEventListener('keydown', escKeyDownHandler);
-      pointEditComponent.element.querySelector('.event__rollup-btn')
-        .addEventListener('click', replaceFormToCard);
     }
 
     function replaceFormToCard() {
