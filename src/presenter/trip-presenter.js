@@ -12,6 +12,7 @@ export default class TripPresenter {
   #mainContainer = null;
   #controlsFilter = null;
   #pointModel = null;
+  #contentList = new ContentList();
 
   constructor({ headerContainer, mainContainer, controlsFilter }) {
     this.#headerContainer = headerContainer;
@@ -23,63 +24,57 @@ export default class TripPresenter {
   init() {
     this.#pointModel.init();
     const points = this.#pointModel.getPoints();
-    const offers = this.#pointModel.getOffers();
-    const destinations = this.#pointModel.getDestinations();
 
-    // Отрисовка информации о маршруте
+    // Отрисовка UI элементов
     render(new TripInfoView(), this.#headerContainer, RenderPosition.AFTERBEGIN);
-
-    // Отрисовка фильтров
     render(new FilterView(), this.#controlsFilter, RenderPosition.BEFOREEND);
-
-    // Отрисовка сортировки
     render(new SortView(), this.#mainContainer, RenderPosition.BEFOREEND);
+    render(this.#contentList, this.#mainContainer, RenderPosition.BEFOREEND);
 
-    const contentList = new ContentList();
-    render(contentList, this.#mainContainer, RenderPosition.BEFOREEND);
+    // Отрисовка всех точек маршрута
+    points.forEach((point) => this.#renderPoint(point));
+  }
 
-    // Отрисовка точек маршрута на основе данных из модели
-    points.forEach((point) => {
-      const destination = destinations.find((dest) => dest.id === point.destination);
-      const availableOffers = offers.find((offer) => offer.type === point.type)?.offers || [];
+  #renderPoint(point) {
+    const destinations = this.#pointModel.getDestinations();
+    const offers = this.#pointModel.getOffers();
+    const destination = destinations.find((dest) => dest.id === point.destination);
+    const availableOffers = offers.find((offer) => offer.type === point.type)?.offers || [];
 
-      const pointComponent = new EventPointView({
-        point,
-        destination,
-        offers: availableOffers,
-        onEditClick: replaceCardToForm
-      });
-
-      const pointEditComponent = new EditEventFormView({
-        point,
-        offers,
-        destinations,
-        onFormSubmit: replaceFormToCard,
-        onEditClose: replaceFormToCard
-      });
-
-      function replaceCardToForm() {
-        replace(pointEditComponent, pointComponent);
-        document.addEventListener('keydown', escKeyDownHandler);
-
-        // Добавляем обработчик клика по "стрелке вверх"
-        pointEditComponent.element.querySelector('.event__rollup-btn')
-          .addEventListener('click', replaceFormToCard);
-      }
-
-      function replaceFormToCard() {
-        replace(pointComponent, pointEditComponent);
-        document.removeEventListener('keydown', escKeyDownHandler);
-      }
-
-      function escKeyDownHandler(evt) {
-        if (evt.key === 'Escape') {
-          evt.preventDefault();
-          replaceFormToCard();
-        }
-      }
-
-      render(pointComponent, contentList.element, RenderPosition.BEFOREEND);
+    const pointComponent = new EventPointView({
+      point,
+      destination,
+      offers: availableOffers,
+      onEditClick: replaceCardToForm
     });
+
+    const pointEditComponent = new EditEventFormView({
+      point,
+      offers,
+      destinations,
+      onFormSubmit: replaceFormToCard,
+      onEditClose: replaceFormToCard
+    });
+
+    function replaceCardToForm() {
+      replace(pointEditComponent, pointComponent);
+      document.addEventListener('keydown', escKeyDownHandler);
+      pointEditComponent.element.querySelector('.event__rollup-btn')
+        .addEventListener('click', replaceFormToCard);
+    }
+
+    function replaceFormToCard() {
+      replace(pointComponent, pointEditComponent);
+      document.removeEventListener('keydown', escKeyDownHandler);
+    }
+
+    function escKeyDownHandler(evt) {
+      if (evt.key === 'Escape') {
+        evt.preventDefault();
+        replaceFormToCard();
+      }
+    }
+
+    render(pointComponent, this.#contentList.element, RenderPosition.BEFOREEND);
   }
 }
