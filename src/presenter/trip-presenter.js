@@ -5,7 +5,10 @@ import EditEventFormView from '../view/edit-event-form-view.js';
 import TripInfoView from '../view/trip-info-view.js';
 import ContentList from '../view/content-list.js';
 import PointModel from '../model/points-model.js';
+import NoPointsView from '../view/no-points-view.js';
 import { render, replace, RenderPosition } from '../framework/render.js';
+import { FilterType } from '../const.js';
+import dayjs from 'dayjs';
 
 export default class TripPresenter {
   #headerContainer = null;
@@ -24,14 +27,26 @@ export default class TripPresenter {
   init() {
     this.#pointModel.init();
     const points = this.#pointModel.getPoints();
+    const destinations = this.#pointModel.getDestinations();
 
-    // Отрисовка UI элементов
-    render(new TripInfoView(), this.#headerContainer, RenderPosition.AFTERBEGIN);
-    render(new FilterView(), this.#controlsFilter, RenderPosition.BEFOREEND);
+    // Определяем, какие фильтры активны
+    const activeFilters = {
+      [FilterType.EVERYTHING]: points.length > 0,
+      [FilterType.FUTURE]: points.some((point) => dayjs(point.dateFrom).isAfter(dayjs())),
+      [FilterType.PRESENT]: points.some((point) => dayjs(point.dateFrom).isBefore(dayjs()) && dayjs(point.dateTo).isAfter(dayjs())),
+      [FilterType.PAST]: points.some((point) => dayjs(point.dateTo).isBefore(dayjs())),
+    };
+
+    render(new TripInfoView(points, destinations), this.#headerContainer, RenderPosition.AFTERBEGIN);
+    render(new FilterView(activeFilters), this.#controlsFilter, RenderPosition.BEFOREEND);
     render(new SortView(), this.#mainContainer, RenderPosition.BEFOREEND);
     render(this.#contentList, this.#mainContainer, RenderPosition.BEFOREEND);
 
-    // Отрисовка всех точек маршрута
+    if (!points.length) {
+      render(new NoPointsView (FilterType.EVERYTHING), this.#contentList.element, RenderPosition.BEFOREEND);
+      return;
+    }
+
     points.forEach((point) => this.#renderPoint(point));
   }
 
