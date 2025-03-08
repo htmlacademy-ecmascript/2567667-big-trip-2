@@ -7,9 +7,10 @@ import ContentList from '../view/content-list.js';
 import PointModel from '../model/points-model.js';
 import NoPointsView from '../view/no-points-view.js';
 import { render, replace, RenderPosition } from '../framework/render.js';
-import { FilterType } from '../const.js';
+import { FilterType, SortType } from '../const.js';
 import dayjs from 'dayjs';
 import { filterFunctions } from '../utils/filter.js';
+import { sortFunctions } from '../utils/sort.js';
 
 export default class TripPresenter {
   #headerContainer = null;
@@ -18,6 +19,7 @@ export default class TripPresenter {
   #pointModel = null;
   #contentList = new ContentList();
   #currentFilter = FilterType.EVERYTHING; // Текущий выбранный фильтр
+  #currentSort = SortType.DAY; // Текущая сортировка
 
   constructor({ headerContainer, mainContainer, controlsFilter }) {
     this.#headerContainer = headerContainer;
@@ -40,14 +42,19 @@ export default class TripPresenter {
     };
 
     render(new TripInfoView(points, destinations), this.#headerContainer, RenderPosition.AFTERBEGIN);
+
     render(new FilterView({
       filters: activeFilters,
-      onFilterChange: this.#handleFilterChange, // Передаем обработчик
+      onFilterChange: this.#handleFilterChange,
     }), this.#controlsFilter, RenderPosition.BEFOREEND);
-    render(new SortView(), this.#mainContainer, RenderPosition.BEFOREEND);
+
+    render(new SortView({
+      onSortChange: this.#handleSortChange,
+    }), this.#mainContainer, RenderPosition.BEFOREEND);
+
     render(this.#contentList, this.#mainContainer, RenderPosition.BEFOREEND);
 
-    this.#renderPoints(); // Рендерим точки с учетом текущего фильтра
+    this.#renderPoints(); // Рендерим точки с учетом текущего фильтра и сортировки
   }
 
   #handleFilterChange = (filterType) => {
@@ -55,18 +62,28 @@ export default class TripPresenter {
     this.#renderPoints(); // Обновляем список точек при изменении фильтра
   };
 
+  #handleSortChange = (sortType) => {
+    this.#currentSort = sortType;
+    this.#renderPoints(); // Обновляем список точек при изменении сортировки
+  };
+
+  #applySort(points) {
+    return sortFunctions[this.#currentSort](points); // Применяем сортировку
+  }
+
   #renderPoints() {
     const points = this.#pointModel.getPoints();
     const filteredPoints = filterFunctions[this.#currentFilter](points); // Фильтруем точки
+    const sortedPoints = this.#applySort(filteredPoints); // Применяем сортировку
 
     this.#contentList.element.innerHTML = ''; // Очищаем список
 
-    if (!filteredPoints.length) {
+    if (!sortedPoints.length) {
       render(new NoPointsView(this.#currentFilter), this.#contentList.element, RenderPosition.BEFOREEND);
       return;
     }
 
-    filteredPoints.forEach((point) => this.#renderPoint(point));
+    sortedPoints.forEach((point) => this.#renderPoint(point)); // Рендерим отсортированные точки
   }
 
   #renderPoint(point) {
