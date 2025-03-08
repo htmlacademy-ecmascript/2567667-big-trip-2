@@ -9,6 +9,7 @@ import NoPointsView from '../view/no-points-view.js';
 import { render, replace, RenderPosition } from '../framework/render.js';
 import { FilterType } from '../const.js';
 import dayjs from 'dayjs';
+import { filterFunctions } from '../utils/filter.js';
 
 export default class TripPresenter {
   #headerContainer = null;
@@ -16,6 +17,7 @@ export default class TripPresenter {
   #controlsFilter = null;
   #pointModel = null;
   #contentList = new ContentList();
+  #currentFilter = FilterType.EVERYTHING; // Текущий выбранный фильтр
 
   constructor({ headerContainer, mainContainer, controlsFilter }) {
     this.#headerContainer = headerContainer;
@@ -38,16 +40,33 @@ export default class TripPresenter {
     };
 
     render(new TripInfoView(points, destinations), this.#headerContainer, RenderPosition.AFTERBEGIN);
-    render(new FilterView(activeFilters), this.#controlsFilter, RenderPosition.BEFOREEND);
+    render(new FilterView({
+      filters: activeFilters,
+      onFilterChange: this.#handleFilterChange, // Передаем обработчик
+    }), this.#controlsFilter, RenderPosition.BEFOREEND);
     render(new SortView(), this.#mainContainer, RenderPosition.BEFOREEND);
     render(this.#contentList, this.#mainContainer, RenderPosition.BEFOREEND);
 
-    if (!points.length) {
-      render(new NoPointsView (FilterType.EVERYTHING), this.#contentList.element, RenderPosition.BEFOREEND);
+    this.#renderPoints(); // Рендерим точки с учетом текущего фильтра
+  }
+
+  #handleFilterChange = (filterType) => {
+    this.#currentFilter = filterType;
+    this.#renderPoints(); // Обновляем список точек при изменении фильтра
+  };
+
+  #renderPoints() {
+    const points = this.#pointModel.getPoints();
+    const filteredPoints = filterFunctions[this.#currentFilter](points); // Фильтруем точки
+
+    this.#contentList.element.innerHTML = ''; // Очищаем список
+
+    if (!filteredPoints.length) {
+      render(new NoPointsView(this.#currentFilter), this.#contentList.element, RenderPosition.BEFOREEND);
       return;
     }
 
-    points.forEach((point) => this.#renderPoint(point));
+    filteredPoints.forEach((point) => this.#renderPoint(point));
   }
 
   #renderPoint(point) {
@@ -60,7 +79,7 @@ export default class TripPresenter {
       point,
       destination,
       offers: availableOffers,
-      onEditClick: replaceCardToForm
+      onEditClick: replaceCardToForm,
     });
 
     const pointEditComponent = new EditEventFormView({
@@ -68,7 +87,7 @@ export default class TripPresenter {
       offers,
       destinations,
       onFormSubmit: replaceFormToCard,
-      onEditClose: replaceFormToCard
+      onEditClose: replaceFormToCard,
     });
 
     function replaceCardToForm() {

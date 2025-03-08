@@ -96,8 +96,8 @@ const mockPoints = [
   {
     id: 'point-7',
     basePrice: 6000,
-    dateFrom: '2019-03-19T11:20',
-    dateTo: '2019-03-19T13:00',
+    dateFrom: '2025-03-19T11:20',
+    dateTo: '2025-03-19T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcau',
     isFavorite: !!getRandomNumber(1),
     offers: [
@@ -112,8 +112,8 @@ const mockPoints = [
   {
     id: 'point-8',
     basePrice: 6000,
-    dateFrom: '2019-03-19T11:20',
-    dateTo: '2019-03-19T13:00',
+    dateFrom: '2025-03-08T11:20',
+    dateTo: '2025-03-09T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcai',
     isFavorite: !!getRandomNumber(1),
     offers: [],
@@ -122,8 +122,8 @@ const mockPoints = [
   {
     id: 'point-9',
     basePrice: 6000,
-    dateFrom: '2019-03-19T11:20',
-    dateTo: '2019-03-19T13:00',
+    dateFrom: '2026-03-19T11:20',
+    dateTo: '2026-03-19T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcao',
     isFavorite: !!getRandomNumber(1),
     offers: [
