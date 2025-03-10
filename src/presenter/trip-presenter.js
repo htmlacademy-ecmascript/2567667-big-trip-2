@@ -5,13 +5,21 @@ import EditEventFormView from '../view/edit-event-form-view.js';
 import TripInfoView from '../view/trip-info-view.js';
 import ContentList from '../view/content-list.js';
 import PointModel from '../model/points-model.js';
+import NoPointsView from '../view/no-points-view.js';
 import { render, replace, RenderPosition } from '../framework/render.js';
+import { FilterType, SortType } from '../const.js';
+import dayjs from 'dayjs';
+import { filterFunctions } from '../utils/filter.js';
+import { sortFunctions } from '../utils/sort.js';
 
 export default class TripPresenter {
   #headerContainer = null;
   #mainContainer = null;
   #controlsFilter = null;
   #pointModel = null;
+  #contentList = new ContentList();
+  #currentFilter = FilterType.EVERYTHING; // Текущий выбранный фильтр
+  #currentSort = SortType.DAY; // Текущая сортировка
 
   constructor({ headerContainer, mainContainer, controlsFilter }) {
     this.#headerContainer = headerContainer;
@@ -23,63 +31,99 @@ export default class TripPresenter {
   init() {
     this.#pointModel.init();
     const points = this.#pointModel.getPoints();
-    const offers = this.#pointModel.getOffers();
     const destinations = this.#pointModel.getDestinations();
 
-    // Отрисовка информации о маршруте
-    render(new TripInfoView(), this.#headerContainer, RenderPosition.AFTERBEGIN);
+    // Определяем, какие фильтры активны
+    const activeFilters = {
+      [FilterType.EVERYTHING]: points.length > 0,
+      [FilterType.FUTURE]: points.some((point) => dayjs(point.dateFrom).isAfter(dayjs())),
+      [FilterType.PRESENT]: points.some((point) => dayjs(point.dateFrom).isBefore(dayjs()) && dayjs(point.dateTo).isAfter(dayjs())),
+      [FilterType.PAST]: points.some((point) => dayjs(point.dateTo).isBefore(dayjs())),
+    };
 
-    // Отрисовка фильтров
-    render(new FilterView(), this.#controlsFilter, RenderPosition.BEFOREEND);
+    render(new TripInfoView(points, destinations), this.#headerContainer, RenderPosition.AFTERBEGIN);
 
-    // Отрисовка сортировки
-    render(new SortView(), this.#mainContainer, RenderPosition.BEFOREEND);
+    render(new FilterView({
+      filters: activeFilters,
+      onFilterChange: this.#handleFilterChange,
+    }), this.#controlsFilter, RenderPosition.BEFOREEND);
 
-    const contentList = new ContentList();
-    render(contentList, this.#mainContainer, RenderPosition.BEFOREEND);
+    render(new SortView({
+      onSortChange: this.#handleSortChange,
+    }), this.#mainContainer, RenderPosition.BEFOREEND);
 
-    // Отрисовка точек маршрута на основе данных из модели
-    points.forEach((point) => {
-      const destination = destinations.find((dest) => dest.id === point.destination);
-      const availableOffers = offers.find((offer) => offer.type === point.type)?.offers || [];
+    render(this.#contentList, this.#mainContainer, RenderPosition.BEFOREEND);
 
-      const pointComponent = new EventPointView({
-        point,
-        destination,
-        offers: availableOffers,
-        onEditClick: replaceCardToForm
-      });
+    this.#renderPoints(); // Рендерим точки с учетом текущего фильтра и сортировки
+  }
 
-      const pointEditComponent = new EditEventFormView({
-        point,
-        offers,
-        destinations,
-        onFormSubmit: replaceFormToCard,
-        onEditClose: replaceFormToCard
-      });
+  #handleFilterChange = (filterType) => {
+    this.#currentFilter = filterType;
+    this.#renderPoints(); // Обновляем список точек при изменении фильтра
+  };
 
-      function replaceCardToForm() {
-        replace(pointEditComponent, pointComponent);
-        document.addEventListener('keydown', escKeyDownHandler);
+  #handleSortChange = (sortType) => {
+    this.#currentSort = sortType;
+    this.#renderPoints(); // Обновляем список точек при изменении сортировки
+  };
 
-        // Добавляем обработчик клика по "стрелке вверх"
-        pointEditComponent.element.querySelector('.event__rollup-btn')
-          .addEventListener('click', replaceFormToCard);
-      }
+  #applySort(points) {
+    return sortFunctions[this.#currentSort](points); // Применяем сортировку
+  }
 
-      function replaceFormToCard() {
-        replace(pointComponent, pointEditComponent);
-        document.removeEventListener('keydown', escKeyDownHandler);
-      }
+  #renderPoints() {
+    const points = this.#pointModel.getPoints();
+    const filteredPoints = filterFunctions[this.#currentFilter](points); // Фильтруем точки
+    const sortedPoints = this.#applySort(filteredPoints); // Применяем сортировку
 
-      function escKeyDownHandler(evt) {
-        if (evt.key === 'Escape') {
-          evt.preventDefault();
-          replaceFormToCard();
-        }
-      }
+    this.#contentList.element.innerHTML = ''; // Очищаем список
 
-      render(pointComponent, contentList.element, RenderPosition.BEFOREEND);
+    if (!sortedPoints.length) {
+      render(new NoPointsView(this.#currentFilter), this.#contentList.element, RenderPosition.BEFOREEND);
+      return;
+    }
+
+    sortedPoints.forEach((point) => this.#renderPoint(point)); // Рендерим отсортированные точки
+  }
+
+  #renderPoint(point) {
+    const destinations = this.#pointModel.getDestinations();
+    const offers = this.#pointModel.getOffers();
+    const destination = destinations.find((dest) => dest.id === point.destination);
+    const availableOffers = offers.find((offer) => offer.type === point.type)?.offers || [];
+
+    const pointComponent = new EventPointView({
+      point,
+      destination,
+      offers: availableOffers,
+      onEditClick: replaceCardToForm,
     });
+
+    const pointEditComponent = new EditEventFormView({
+      point,
+      offers,
+      destinations,
+      onFormSubmit: replaceFormToCard,
+      onEditClose: replaceFormToCard,
+    });
+
+    function replaceCardToForm() {
+      replace(pointEditComponent, pointComponent);
+      document.addEventListener('keydown', escKeyDownHandler);
+    }
+
+    function replaceFormToCard() {
+      replace(pointComponent, pointEditComponent);
+      document.removeEventListener('keydown', escKeyDownHandler);
+    }
+
+    function escKeyDownHandler(evt) {
+      if (evt.key === 'Escape') {
+        evt.preventDefault();
+        replaceFormToCard();
+      }
+    }
+
+    render(pointComponent, this.#contentList.element, RenderPosition.BEFOREEND);
   }
 }

@@ -1,6 +1,6 @@
 import AbstractView from '../framework/view/abstract-view.js';
 import dayjs from 'dayjs';
-import { calculateDuration } from '../utils.js';
+import { calculateDuration } from '../utils/utils.js';
 
 function createEventPointTemplate(point, destination, offers) {
   return `

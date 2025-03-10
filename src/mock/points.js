@@ -1,4 +1,4 @@
-import { getRandomArrayElement, getRandomNumber } from '../utils.js';
+import { getRandomArrayElement, getRandomNumber } from '../utils/utils.js';
 
 const mockPoints = [
   {
@@ -65,7 +65,7 @@ const mockPoints = [
   },
   {
     id: 'point-5',
-    basePrice: 6000,
+    basePrice: 3784,
     dateFrom: '2019-03-19T11:20',
     dateTo: '2019-03-19T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcat',
@@ -78,7 +78,7 @@ const mockPoints = [
   },
   {
     id: 'point-6',
-    basePrice: 6000,
+    basePrice: 4567,
     dateFrom: '2019-03-19T11:20',
     dateTo: '2019-03-19T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcay',
@@ -95,9 +95,9 @@ const mockPoints = [
   },
   {
     id: 'point-7',
-    basePrice: 6000,
-    dateFrom: '2019-03-19T11:20',
-    dateTo: '2019-03-19T13:00',
+    basePrice: 5680,
+    dateFrom: '2025-03-19T11:20',
+    dateTo: '2025-03-19T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcau',
     isFavorite: !!getRandomNumber(1),
     offers: [
@@ -111,9 +111,9 @@ const mockPoints = [
   },
   {
     id: 'point-8',
-    basePrice: 6000,
-    dateFrom: '2019-03-19T11:20',
-    dateTo: '2019-03-19T13:00',
+    basePrice: 6983,
+    dateFrom: '2025-03-08T11:20',
+    dateTo: '2025-03-09T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcai',
     isFavorite: !!getRandomNumber(1),
     offers: [],
@@ -121,9 +121,9 @@ const mockPoints = [
   },
   {
     id: 'point-9',
-    basePrice: 6000,
-    dateFrom: '2019-03-19T11:20',
-    dateTo: '2019-03-19T13:00',
+    basePrice: 7248,
+    dateFrom: '2026-03-19T11:20',
+    dateTo: '2026-03-19T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcao',
     isFavorite: !!getRandomNumber(1),
     offers: [
