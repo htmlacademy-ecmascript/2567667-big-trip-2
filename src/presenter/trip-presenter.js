@@ -77,8 +77,10 @@ export default class TripPresenter {
     const pointPresenter = new PointPresenter({
       contentList: this.#contentList,
       onDataChange: this.#handlePointChange,
-      onFavoriteChange: this.#handleFavoriteChange
+      onFavoriteChange: this.#handleFavoriteChange,
+      onResetView: this.#resetAllPointsView
     });
+
     pointPresenter.init(point, this.#pointModel.getDestinations(), this.#pointModel.getOffers());
     this.#pointPresenters.set(point.id, pointPresenter);
   }
@@ -97,4 +99,8 @@ export default class TripPresenter {
     this.#pointPresenters.forEach((presenter) => presenter.destroy());
     this.#pointPresenters.clear();
   }
+
+  #resetAllPointsView = () => {
+    this.#pointPresenters.forEach((presenter) => presenter.resetView());
+  };
 }

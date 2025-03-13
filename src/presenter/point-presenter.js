@@ -9,13 +9,15 @@ export default class PointPresenter {
   #destinations = null;
   #onDataChange = null;
   #onFavoriteChange = null;
+  #onResetView = null;
   #pointComponent = null;
   #pointEditComponent = null;
 
-  constructor({ contentList, onDataChange, onFavoriteChange }) {
+  constructor({ contentList, onDataChange, onFavoriteChange, onResetView }) {
     this.#contentList = contentList;
     this.#onDataChange = onDataChange;
     this.#onFavoriteChange = onFavoriteChange;
+    this.#onResetView = onResetView;
   }
 
   init(point, destinations, offers) {
@@ -42,6 +44,7 @@ export default class PointPresenter {
   }
 
   #replaceCardToForm = () => {
+    this.#onResetView();
     replace(this.#pointEditComponent, this.#pointComponent);
     document.addEventListener('keydown', this.#escKeyDownHandler);
   };
@@ -67,6 +70,12 @@ export default class PointPresenter {
     const updatedPoint = { ...this.#point, isFavorite: !this.#point.isFavorite };
     this.#onFavoriteChange(updatedPoint);
   };
+
+  resetView() {
+    if (this.#pointEditComponent && this.#contentList.element.contains(this.#pointEditComponent.element)) {
+      this.#replaceFormToCard();
+    }
+  }
 
   destroy() {
     remove(this.#pointComponent);
