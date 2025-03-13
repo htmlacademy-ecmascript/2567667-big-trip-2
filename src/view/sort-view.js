@@ -1,4 +1,3 @@
-// view/sort-view.js
 import AbstractView from '../framework/view/abstract-view.js';
 import { SortType } from '../const.js';
 
