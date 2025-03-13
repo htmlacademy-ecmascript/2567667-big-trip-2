@@ -31,19 +31,17 @@ export default class TripPresenter {
     this.#pointModel.init();
     const points = this.#pointModel.getPoints();
     const destinations = this.#pointModel.getDestinations();
-
     const activeFilters = {
       [FilterType.EVERYTHING]: points.length > 0,
-      [FilterType.FUTURE]: points.some((point) => point.dateFrom > Date.now()),
-      [FilterType.PRESENT]: points.some((point) => point.dateFrom < Date.now() && point.dateTo > Date.now()),
-      [FilterType.PAST]: points.some((point) => point.dateTo < Date.now()),
+      [FilterType.FUTURE]: filterFunctions[FilterType.FUTURE](points).length > 0,
+      [FilterType.PRESENT]: filterFunctions[FilterType.PRESENT](points).length > 0,
+      [FilterType.PAST]: filterFunctions[FilterType.PAST](points).length > 0,
     };
 
     render(new TripInfoView(points, destinations), this.#headerContainer, RenderPosition.AFTERBEGIN);
     render(new FilterView({ filters: activeFilters, onFilterChange: this.#handleFilterChange }), this.#controlsFilter, RenderPosition.BEFOREEND);
     render(new SortView({ onSortChange: this.#handleSortChange }), this.#mainContainer, RenderPosition.BEFOREEND);
     render(this.#contentList, this.#mainContainer, RenderPosition.BEFOREEND);
-
     this.#renderPoints();
   }
 
@@ -63,7 +61,6 @@ export default class TripPresenter {
 
   #renderPoints() {
     this.#clearPoints();
-
     const points = this.#pointModel.getPoints();
     const filteredPoints = filterFunctions[this.#currentFilter](points);
     const sortedPoints = this.#applySort(filteredPoints);
@@ -78,12 +75,23 @@ export default class TripPresenter {
 
   #renderPoint(point) {
     const pointPresenter = new PointPresenter({
-      contentList: this.#contentList
+      contentList: this.#contentList,
+      onDataChange: this.#handlePointChange,
+      onFavoriteChange: this.#handleFavoriteChange
     });
-
     pointPresenter.init(point, this.#pointModel.getDestinations(), this.#pointModel.getOffers());
     this.#pointPresenters.set(point.id, pointPresenter);
   }
+
+  #handlePointChange = (updatedPoint) => {
+    this.#pointModel.updatePointFavoriteStatus(updatedPoint);
+    this.#renderPoints();
+  };
+
+  #handleFavoriteChange = (updatedPoint) => {
+    this.#pointModel.updatePointFavoriteStatus(updatedPoint);
+    this.#renderPoints();
+  };
 
   #clearPoints() {
     this.#pointPresenters.forEach((presenter) => presenter.destroy());

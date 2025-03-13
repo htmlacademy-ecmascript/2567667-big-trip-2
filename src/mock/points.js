@@ -4,8 +4,8 @@ const mockPoints = [
   {
     id: 'point-1',
     basePrice: 1100,
-    dateFrom: '2019-07-10T22:55',
-    dateTo: '2019-07-11T11:22',
+    dateFrom: '2025-07-10T22:55',
+    dateTo: '2025-07-11T11:22',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcaq',
     isFavorite: !!getRandomNumber(1),
     offers: [
@@ -21,8 +21,8 @@ const mockPoints = [
   {
     id: 'point-2',
     basePrice: 3470,
-    dateFrom: '2019-03-18T12:25',
-    dateTo: '2019-03-18T13:35',
+    dateFrom: '2025-03-18T12:25',
+    dateTo: '2025-03-18T13:35',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcaw',
     isFavorite: !!getRandomNumber(1),
     offers: [
@@ -35,8 +35,8 @@ const mockPoints = [
   {
     id: 'point-3',
     basePrice: 1000,
-    dateFrom: '2019-03-18T14:30',
-    dateTo: '2019-03-18T16:05',
+    dateFrom: '2025-03-18T14:30',
+    dateTo: '2025-03-18T16:05',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcae',
     isFavorite: !!getRandomNumber(1),
     offers: [
@@ -49,8 +49,8 @@ const mockPoints = [
   {
     id: 'point-4',
     basePrice: 1500,
-    dateFrom: '2019-03-18T12:25',
-    dateTo: '2019-03-18T13:35',
+    dateFrom: '2024-03-18T12:25',
+    dateTo: '2024-03-18T13:35',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcar',
     isFavorite: !!getRandomNumber(1),
     offers: [
@@ -66,8 +66,8 @@ const mockPoints = [
   {
     id: 'point-5',
     basePrice: 3784,
-    dateFrom: '2019-03-19T11:20',
-    dateTo: '2019-03-19T13:00',
+    dateFrom: '2024-03-19T11:20',
+    dateTo: '2024-03-19T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcat',
     isFavorite: !!getRandomNumber(1),
     offers: [
@@ -79,8 +79,8 @@ const mockPoints = [
   {
     id: 'point-6',
     basePrice: 4567,
-    dateFrom: '2019-03-19T11:20',
-    dateTo: '2019-03-19T13:00',
+    dateFrom: '2025-03-19T11:20',
+    dateTo: '2025-03-19T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcay',
     isFavorite: !!getRandomNumber(1),
     offers: [
@@ -112,8 +112,8 @@ const mockPoints = [
   {
     id: 'point-8',
     basePrice: 6983,
-    dateFrom: '2025-03-08T11:20',
-    dateTo: '2025-03-09T13:00',
+    dateFrom: '2025-03-13T11:20',
+    dateTo: '2025-03-14T13:00',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcai',
     isFavorite: !!getRandomNumber(1),
     offers: [],

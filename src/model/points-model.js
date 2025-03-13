@@ -24,4 +24,11 @@ export default class PointModel {
   getDestinations() {
     return this.#destinations;
   }
+
+  updatePointFavoriteStatus(updatedPoint) {
+    const index = this.#points.findIndex((point) => point.id === updatedPoint.id);
+    if (index !== -1) {
+      this.#points[index] = updatedPoint;
+    }
+  }
 }

@@ -8,25 +8,26 @@ export default class PointPresenter {
   #offers = null;
   #destinations = null;
   #onDataChange = null;
-
+  #onFavoriteChange = null;
   #pointComponent = null;
   #pointEditComponent = null;
 
-  constructor({ contentList, onDataChange }) {
+  constructor({ contentList, onDataChange, onFavoriteChange }) {
     this.#contentList = contentList;
     this.#onDataChange = onDataChange;
+    this.#onFavoriteChange = onFavoriteChange;
   }
 
   init(point, destinations, offers) {
     this.#point = point;
     this.#destinations = destinations;
     this.#offers = offers;
-
     this.#pointComponent = new EventPointView({
       point: this.#point,
       destination: this.#destinations.find((dest) => dest.id === this.#point.destination),
       offers: this.#offers.find((offer) => offer.type === this.#point.type)?.offers || [],
-      onEditClick: this.#replaceCardToForm
+      onEditClick: this.#replaceCardToForm,
+      onFavoriteClick: this.#handleFavoriteClick
     });
 
     this.#pointEditComponent = new EditEventFormView({
@@ -60,6 +61,11 @@ export default class PointPresenter {
   #handleFormSubmit = () => {
     this.#replaceFormToCard();
     this.#onDataChange(this.#point);
+  };
+
+  #handleFavoriteClick = () => {
+    const updatedPoint = { ...this.#point, isFavorite: !this.#point.isFavorite };
+    this.#onFavoriteChange(updatedPoint);
   };
 
   destroy() {
