@@ -1,16 +1,14 @@
 import SortView from '../view/sort-view.js';
 import FilterView from '../view/filter-view.js';
-import EventPointView from '../view/event-point-view.js';
-import EditEventFormView from '../view/edit-event-form-view.js';
 import TripInfoView from '../view/trip-info-view.js';
 import ContentList from '../view/content-list.js';
 import PointModel from '../model/points-model.js';
 import NoPointsView from '../view/no-points-view.js';
-import { render, replace, RenderPosition } from '../framework/render.js';
+import { render, RenderPosition } from '../framework/render.js';
 import { FilterType, SortType } from '../const.js';
-import dayjs from 'dayjs';
 import { filterFunctions } from '../utils/filter.js';
 import { sortFunctions } from '../utils/sort.js';
+import PointPresenter from '../presenter/point-presenter.js';
 
 export default class TripPresenter {
   #headerContainer = null;
@@ -18,8 +16,9 @@ export default class TripPresenter {
   #controlsFilter = null;
   #pointModel = null;
   #contentList = new ContentList();
-  #currentFilter = FilterType.EVERYTHING; // Текущий выбранный фильтр
-  #currentSort = SortType.DAY; // Текущая сортировка
+  #currentFilter = FilterType.EVERYTHING;
+  #currentSort = SortType.DAY;
+  #pointPresenters = new Map();
 
   constructor({ headerContainer, mainContainer, controlsFilter }) {
     this.#headerContainer = headerContainer;
@@ -32,98 +31,76 @@ export default class TripPresenter {
     this.#pointModel.init();
     const points = this.#pointModel.getPoints();
     const destinations = this.#pointModel.getDestinations();
-
-    // Определяем, какие фильтры активны
     const activeFilters = {
       [FilterType.EVERYTHING]: points.length > 0,
-      [FilterType.FUTURE]: points.some((point) => dayjs(point.dateFrom).isAfter(dayjs())),
-      [FilterType.PRESENT]: points.some((point) => dayjs(point.dateFrom).isBefore(dayjs()) && dayjs(point.dateTo).isAfter(dayjs())),
-      [FilterType.PAST]: points.some((point) => dayjs(point.dateTo).isBefore(dayjs())),
+      [FilterType.FUTURE]: filterFunctions[FilterType.FUTURE](points).length > 0,
+      [FilterType.PRESENT]: filterFunctions[FilterType.PRESENT](points).length > 0,
+      [FilterType.PAST]: filterFunctions[FilterType.PAST](points).length > 0,
     };
 
     render(new TripInfoView(points, destinations), this.#headerContainer, RenderPosition.AFTERBEGIN);
-
-    render(new FilterView({
-      filters: activeFilters,
-      onFilterChange: this.#handleFilterChange,
-    }), this.#controlsFilter, RenderPosition.BEFOREEND);
-
-    render(new SortView({
-      onSortChange: this.#handleSortChange,
-    }), this.#mainContainer, RenderPosition.BEFOREEND);
-
+    render(new FilterView({ filters: activeFilters, onFilterChange: this.#handleFilterChange }), this.#controlsFilter, RenderPosition.BEFOREEND);
+    render(new SortView({ onSortChange: this.#handleSortChange }), this.#mainContainer, RenderPosition.BEFOREEND);
     render(this.#contentList, this.#mainContainer, RenderPosition.BEFOREEND);
-
-    this.#renderPoints(); // Рендерим точки с учетом текущего фильтра и сортировки
+    this.#renderPoints();
   }
 
   #handleFilterChange = (filterType) => {
     this.#currentFilter = filterType;
-    this.#renderPoints(); // Обновляем список точек при изменении фильтра
+    this.#renderPoints();
   };
 
   #handleSortChange = (sortType) => {
     this.#currentSort = sortType;
-    this.#renderPoints(); // Обновляем список точек при изменении сортировки
+    this.#renderPoints();
   };
 
   #applySort(points) {
-    return sortFunctions[this.#currentSort](points); // Применяем сортировку
+    return sortFunctions[this.#currentSort](points);
   }
 
   #renderPoints() {
+    this.#clearPoints();
     const points = this.#pointModel.getPoints();
-    const filteredPoints = filterFunctions[this.#currentFilter](points); // Фильтруем точки
-    const sortedPoints = this.#applySort(filteredPoints); // Применяем сортировку
-
-    this.#contentList.element.innerHTML = ''; // Очищаем список
+    const filteredPoints = filterFunctions[this.#currentFilter](points);
+    const sortedPoints = this.#applySort(filteredPoints);
 
     if (!sortedPoints.length) {
       render(new NoPointsView(this.#currentFilter), this.#contentList.element, RenderPosition.BEFOREEND);
       return;
     }
 
-    sortedPoints.forEach((point) => this.#renderPoint(point)); // Рендерим отсортированные точки
+    sortedPoints.forEach((point) => this.#renderPoint(point));
   }
 
   #renderPoint(point) {
-    const destinations = this.#pointModel.getDestinations();
-    const offers = this.#pointModel.getOffers();
-    const destination = destinations.find((dest) => dest.id === point.destination);
-    const availableOffers = offers.find((offer) => offer.type === point.type)?.offers || [];
-
-    const pointComponent = new EventPointView({
-      point,
-      destination,
-      offers: availableOffers,
-      onEditClick: replaceCardToForm,
+    const pointPresenter = new PointPresenter({
+      contentList: this.#contentList,
+      onDataChange: this.#handlePointChange,
+      onFavoriteChange: this.#handleFavoriteChange,
+      onResetView: this.#resetAllPointsView
     });
 
-    const pointEditComponent = new EditEventFormView({
-      point,
-      offers,
-      destinations,
-      onFormSubmit: replaceFormToCard,
-      onEditClose: replaceFormToCard,
-    });
-
-    function replaceCardToForm() {
-      replace(pointEditComponent, pointComponent);
-      document.addEventListener('keydown', escKeyDownHandler);
-    }
-
-    function replaceFormToCard() {
-      replace(pointComponent, pointEditComponent);
-      document.removeEventListener('keydown', escKeyDownHandler);
-    }
-
-    function escKeyDownHandler(evt) {
-      if (evt.key === 'Escape') {
-        evt.preventDefault();
-        replaceFormToCard();
-      }
-    }
-
-    render(pointComponent, this.#contentList.element, RenderPosition.BEFOREEND);
+    pointPresenter.init(point, this.#pointModel.getDestinations(), this.#pointModel.getOffers());
+    this.#pointPresenters.set(point.id, pointPresenter);
   }
+
+  #handlePointChange = (updatedPoint) => {
+    this.#pointModel.updatePointFavoriteStatus(updatedPoint);
+    this.#renderPoints();
+  };
+
+  #handleFavoriteChange = (updatedPoint) => {
+    this.#pointModel.updatePointFavoriteStatus(updatedPoint);
+    this.#renderPoints();
+  };
+
+  #clearPoints() {
+    this.#pointPresenters.forEach((presenter) => presenter.destroy());
+    this.#pointPresenters.clear();
+  }
+
+  #resetAllPointsView = () => {
+    this.#pointPresenters.forEach((presenter) => presenter.resetView());
+  };
 }
