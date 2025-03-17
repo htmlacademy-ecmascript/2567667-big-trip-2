@@ -6,7 +6,7 @@ export const FilterType = {
 };
 
 export const SortType = {
-  DAY: 'sort-day',
-  TIME: 'sort-time',
-  PRICE: 'sort-price',
+  DAY: 'day',
+  TIME: 'time',
+  PRICE: 'price',
 };
