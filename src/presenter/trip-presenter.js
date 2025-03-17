@@ -51,6 +51,9 @@ export default class TripPresenter {
   };
 
   #handleSortChange = (sortType) => {
+    if (this.#currentSort === sortType) {
+      return;
+    }
     this.#currentSort = sortType;
     this.#renderPoints();
   };
@@ -86,18 +89,19 @@ export default class TripPresenter {
   }
 
   #handlePointChange = (updatedPoint) => {
-    this.#pointModel.updatePointFavoriteStatus(updatedPoint);
+    this.#pointModel.updatePoint(updatedPoint);
     this.#renderPoints();
   };
 
   #handleFavoriteChange = (updatedPoint) => {
-    this.#pointModel.updatePointFavoriteStatus(updatedPoint);
+    this.#pointModel.updatePoint(updatedPoint);
     this.#renderPoints();
   };
 
   #clearPoints() {
     this.#pointPresenters.forEach((presenter) => presenter.destroy());
     this.#pointPresenters.clear();
+    this.#contentList.element.innerHTML = '';
   }
 
   #resetAllPointsView = () => {
