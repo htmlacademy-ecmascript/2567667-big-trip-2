@@ -1,7 +1,6 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import dayjs from 'dayjs';
-
-const EVENT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
+import { EVENT_TYPES } from '../const.js';
 
 function createEventTypeListTemplate(type, id) {
   return `
@@ -164,6 +163,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     const newOffers = this.#offers.find((o) => o.type === newType)?.offers || [];
 
     this.updateElement({
+      ...this._state,
       type: newType,
       availableOffers: newOffers
     });
@@ -172,11 +172,18 @@ export default class EditEventFormView extends AbstractStatefulView {
   #handleDestinationChange = (evt) => {
     const selectedDest = this.#destinations.find((d) => d.name === evt.target.value);
     if (selectedDest) {
-      this.updateElement({ destination: selectedDest.id });
+      this.updateElement({
+        ...this._state,
+        destination: selectedDest.id });
     }
   };
 
   #handlePriceChange = (evt) => {
-    this.updateElement({ basePrice: Number(evt.target.value) });
+    const value = Number(evt.target.value);
+    if (!isNaN(value)) {
+      this.updateElement({
+        ...this._state,
+        basePrice: Number(evt.target.value) });
+    }
   };
 }

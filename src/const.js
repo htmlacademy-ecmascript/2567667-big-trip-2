@@ -10,3 +10,5 @@ export const SortType = {
   TIME: 'time',
   PRICE: 'price',
 };
+
+export const EVENT_TYPES = ['taxi', 'bus', 'train', 'ship', 'drive', 'flight', 'check-in', 'sightseeing', 'restaurant'];
