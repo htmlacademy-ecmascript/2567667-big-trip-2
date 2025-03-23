@@ -61,9 +61,9 @@ export default class PointPresenter {
     }
   };
 
-  #handleFormSubmit = () => {
+  #handleFormSubmit = (updatedPoint) => {
     this.#replaceFormToCard();
-    this.#onDataChange(this.#point);
+    this.#onDataChange(updatedPoint);
   };
 
   #handleFavoriteClick = () => {
