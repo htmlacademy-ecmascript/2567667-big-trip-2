@@ -1,5 +1,7 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import dayjs from 'dayjs';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 import { EVENT_TYPES } from '../const.js';
 
 function createEventTypeListTemplate(type, id) {
@@ -104,6 +106,8 @@ export default class EditEventFormView extends AbstractStatefulView {
   #destinations = null;
   #onFormSubmit = null;
   #onEditClose = null;
+  #datepickerFrom = null;
+  #datepickerTo = null;
 
   constructor({ point, offers, destinations, onFormSubmit, onEditClose }) {
     super();
@@ -144,7 +148,51 @@ export default class EditEventFormView extends AbstractStatefulView {
     this.element.querySelector('.event__type-group').addEventListener('change', this.#handleTypeChange);
     this.element.querySelector('.event__input--destination').addEventListener('change', this.#handleDestinationChange);
     this.element.querySelector('.event__input--price').addEventListener('change', this.#handlePriceChange);
+    this.#setDatepickers();
   }
+
+  #setDatepickers() {
+    const dateFromInput = this.element.querySelector('input[name="event-start-time"]');
+    const dateToInput = this.element.querySelector('input[name="event-end-time"]');
+
+    this.#datepickerFrom = flatpickr(dateFromInput, {
+      enableTime: true,
+      dateFormat: 'd/m/Y h:i K',
+      defaultDate: this._state.dateFrom,
+      onChange: this.#handleDateFromChange,
+    });
+
+    this.#datepickerTo = flatpickr(dateToInput, {
+      enableTime: true,
+      dateFormat: 'd/m/Y h:i K',
+      defaultDate: this._state.dateTo,
+      minDate: this._state.dateFrom,
+      onChange: this.#handleDateToChange,
+    });
+  }
+
+  #handleDateFromChange = ([userDate]) => {
+    const newDateFrom = userDate.toISOString();
+    const updatedDateTo = dayjs(this._state.dateTo).isBefore(dayjs(newDateFrom))
+      ? newDateFrom
+      : this._state.dateTo;
+    this.updateElement({
+      ...this._state,
+      dateFrom: newDateFrom,
+      dateTo: updatedDateTo,
+    });
+  };
+
+  #handleDateToChange = ([userDate]) => {
+    const newDateTo = userDate.toISOString();
+    const correctedDateTo = dayjs(newDateTo).isBefore(dayjs(this._state.dateFrom))
+      ? this._state.dateFrom
+      : newDateTo;
+    this.updateElement({
+      ...this._state,
+      dateTo: correctedDateTo,
+    });
+  };
 
   #handleFormSubmit = (evt) => {
     evt.preventDefault();
@@ -186,4 +234,18 @@ export default class EditEventFormView extends AbstractStatefulView {
         basePrice: Number(evt.target.value) });
     }
   };
+
+  removeElement() {
+    super.removeElement();
+
+    if (this.#datepickerFrom) {
+      this.#datepickerFrom.destroy();
+      this.#datepickerFrom = null;
+    }
+
+    if (this.#datepickerTo) {
+      this.#datepickerTo.destroy();
+      this.#datepickerTo = null;
+    }
+  }
 }
