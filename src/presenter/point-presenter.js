@@ -24,10 +24,15 @@ export default class PointPresenter {
     this.#point = point;
     this.#destinations = destinations;
     this.#offers = offers;
+    const allOffersByType = this.#offers.find((offer) => offer.type === this.#point.type)?.offers || [];
+    const selectedOffers = allOffersByType.filter((offer) =>
+      this.#point.offers.includes(offer.id)
+    );
+
     this.#pointComponent = new EventPointView({
       point: this.#point,
       destination: this.#destinations.find((dest) => dest.id === this.#point.destination),
-      offers: this.#offers.find((offer) => offer.type === this.#point.type)?.offers || [],
+      offers: selectedOffers,
       onEditClick: this.#replaceCardToForm,
       onFavoriteClick: this.#handleFavoriteClick
     });

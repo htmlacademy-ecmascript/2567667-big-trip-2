@@ -20,26 +20,32 @@ function createEventTypeListTemplate(type, id) {
   `;
 }
 
+function createOffersTemplate(availableOffers, selectedOfferIds) {
+  return availableOffers.length > 0
+    ? availableOffers.map((offer) => `
+      <div class="event__offer-selector">
+        <input
+          class="event__offer-checkbox visually-hidden"
+          id="event-offer-${offer.id}"
+          type="checkbox"
+          name="event-offer"
+          ${selectedOfferIds.includes(offer.id) ? 'checked' : ''}
+        >
+        <label class="event__offer-label" for="event-offer-${offer.id}">
+          <span class="event__offer-title">${offer.title}</span>
+          &plus;&euro;&nbsp;
+          <span class="event__offer-price">${offer.price}</span>
+        </label>
+      </div>
+    `).join('')
+    : '<p class="event__no-offers">No available offers</p>';
+}
+
 function createEditEventFormTemplate(state, destinations) {
-  const { id, dateFrom, dateTo, destination, type, basePrice, availableOffers } = state;
+  const { id, dateFrom, dateTo, destination, type, basePrice, availableOffers, selectedOfferIds } = state;
   const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
   const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
   const destinationData = destinations.find((dest) => dest.id === destination) || { name: '', description: '', pictures: [] };
-
-  function createOffersTemplate() {
-    return availableOffers.length > 0
-      ? availableOffers.map((offer) => `
-        <div class="event__offer-selector">
-          <input class="event__offer-checkbox visually-hidden" id="event-offer-${offer.id}" type="checkbox" name="event-offer" checked>
-          <label class="event__offer-label" for="event-offer-${offer.id}">
-            <span class="event__offer-title">${offer.title}</span>
-            &plus;&euro;&nbsp;
-            <span class="event__offer-price">${offer.price}</span>
-          </label>
-        </div>
-      `).join('')
-      : '<p class="event__no-offers">No available offers</p>';
-  }
 
   return `
     <li class="trip-events__item">
@@ -83,7 +89,7 @@ function createEditEventFormTemplate(state, destinations) {
         <section class="event__details">
           <section class="event__section event__section--offers">
             <h3 class="event__section-title event__section-title--offers">Offers</h3>
-            <div class="event__available-offers">${createOffersTemplate()}</div>
+            <div class="event__available-offers">${createOffersTemplate(availableOffers, selectedOfferIds)}</div>
           </section>
 
           <section class="event__section event__section--destination">
@@ -115,12 +121,12 @@ export default class EditEventFormView extends AbstractStatefulView {
     this.#destinations = destinations;
     this.#onFormSubmit = onFormSubmit;
     this.#onEditClose = onEditClose;
-
-    const availableOffers = offers.find((o) => o.type === point.type)?.offers || [];
+    const allOffersByType = offers.find((o) => o.type === point.type)?.offers || [];
 
     this._setState({
       ...EditEventFormView.parsePointToState(point),
-      availableOffers
+      availableOffers: allOffersByType,
+      selectedOfferIds: point.offers
     });
 
     this._restoreHandlers();
@@ -138,7 +144,9 @@ export default class EditEventFormView extends AbstractStatefulView {
 
   static parseStateToPoint(state) {
     const point = { ...state };
+    point.offers = state.selectedOfferIds;
     delete point.availableOffers;
+    delete point.selectedOfferIds;
     return point;
   }
 
@@ -148,6 +156,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     this.element.querySelector('.event__type-group').addEventListener('change', this.#handleTypeChange);
     this.element.querySelector('.event__input--destination').addEventListener('change', this.#handleDestinationChange);
     this.element.querySelector('.event__input--price').addEventListener('change', this.#handlePriceChange);
+    this.element.querySelector('.event__available-offers').addEventListener('change', this.#handleOfferChange);
     this.#setDatepickers();
   }
 
@@ -213,7 +222,8 @@ export default class EditEventFormView extends AbstractStatefulView {
     this.updateElement({
       ...this._state,
       type: newType,
-      availableOffers: newOffers
+      availableOffers: newOffers,
+      selectedOfferIds: []
     });
   };
 
@@ -231,8 +241,19 @@ export default class EditEventFormView extends AbstractStatefulView {
     if (!isNaN(value)) {
       this.updateElement({
         ...this._state,
-        basePrice: Number(evt.target.value) });
+        basePrice: value });
     }
+  };
+
+  #handleOfferChange = () => {
+    const checkedOfferIds = Array.from(
+      this.element.querySelectorAll('input[name="event-offer"]:checked')
+    ).map((input) => input.id.replace('event-offer-', ''));
+
+    this._setState({
+      ...this._state,
+      selectedOfferIds: checkedOfferIds
+    });
   };
 
   removeElement() {
