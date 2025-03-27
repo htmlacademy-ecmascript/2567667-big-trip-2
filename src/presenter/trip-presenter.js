@@ -44,7 +44,7 @@ export default class TripPresenter {
 
       case UpdateType.MINOR:
       case UpdateType.MAJOR:
-        this.#clearPoints();
+        this.#clearPoints({ resetSortType: true });
         this.#renderPoints();
         break;
 
@@ -87,7 +87,7 @@ export default class TripPresenter {
 
   #handleFilterChange = (filterType) => {
     this.#currentFilter = filterType;
-    this.#clearPoints();
+    this.#clearPoints({ resetSortType: true });
     this.#renderPoints();
   };
 
@@ -128,10 +128,13 @@ export default class TripPresenter {
     this.#pointPresenters.set(point.id, pointPresenter);
   }
 
-  #clearPoints() {
+  #clearPoints({ resetSortType = false } = {}) {
     this.#pointPresenters.forEach((presenter) => presenter.destroy());
     this.#pointPresenters.clear();
     this.#contentList.element.innerHTML = '';
+    if (resetSortType) {
+      this.#currentSort = SortType.DAY;
+    }
   }
 
   #resetAllPointsView = () => {
