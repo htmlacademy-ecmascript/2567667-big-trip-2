@@ -160,24 +160,40 @@ export default class EditEventFormView extends AbstractStatefulView {
     this.#setDatepickers();
   }
 
+  #initDatepicker(element, defaultDate, minDate, onChange) {
+    return flatpickr(element, {
+      enableTime: true,
+      dateFormat: 'd/m/Y h:i K',
+      defaultDate,
+      ...(minDate && { minDate }),
+      onChange,
+    });
+  }
+
+  #destroyDatepicker(datepicker) {
+    if (datepicker) {
+      datepicker.destroy();
+    }
+    return null;
+  }
+
   #setDatepickers() {
     const dateFromInput = this.element.querySelector('input[name="event-start-time"]');
     const dateToInput = this.element.querySelector('input[name="event-end-time"]');
 
-    this.#datepickerFrom = flatpickr(dateFromInput, {
-      enableTime: true,
-      dateFormat: 'd/m/Y h:i K',
-      defaultDate: this._state.dateFrom,
-      onChange: this.#handleDateFromChange,
-    });
+    this.#datepickerFrom = this.#initDatepicker(
+      dateFromInput,
+      this._state.dateFrom,
+      null,
+      this.#handleDateFromChange
+    );
 
-    this.#datepickerTo = flatpickr(dateToInput, {
-      enableTime: true,
-      dateFormat: 'd/m/Y h:i K',
-      defaultDate: this._state.dateTo,
-      minDate: this._state.dateFrom,
-      onChange: this.#handleDateToChange,
-    });
+    this.#datepickerTo = this.#initDatepicker(
+      dateToInput,
+      this._state.dateTo,
+      this._state.dateFrom,
+      this.#handleDateToChange
+    );
   }
 
   #handleDateFromChange = ([userDate]) => {
@@ -258,15 +274,7 @@ export default class EditEventFormView extends AbstractStatefulView {
 
   removeElement() {
     super.removeElement();
-
-    if (this.#datepickerFrom) {
-      this.#datepickerFrom.destroy();
-      this.#datepickerFrom = null;
-    }
-
-    if (this.#datepickerTo) {
-      this.#datepickerTo.destroy();
-      this.#datepickerTo = null;
-    }
+    this.#datepickerFrom = this.#destroyDatepicker(this.#datepickerFrom);
+    this.#datepickerTo = this.#destroyDatepicker(this.#datepickerTo);
   }
 }
