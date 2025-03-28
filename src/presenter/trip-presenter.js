@@ -1,11 +1,9 @@
 import SortView from '../view/sort-view.js';
-import FilterView from '../view/filter-view.js';
 import TripInfoView from '../view/trip-info-view.js';
 import ContentList from '../view/content-list.js';
-import PointModel from '../model/points-model.js';
 import NoPointsView from '../view/no-points-view.js';
-import { render, RenderPosition } from '../framework/render.js';
-import { FilterType, SortType, UpdateType, UserAction } from '../const.js';
+import { render, RenderPosition, remove } from '../framework/render.js';
+import { SortType, UpdateType, UserAction } from '../const.js';
 import { filterFunctions } from '../utils/filter.js';
 import { sortFunctions } from '../utils/sort.js';
 import PointPresenter from './point-presenter.js';
@@ -15,20 +13,23 @@ export default class TripPresenter {
   #mainContainer = null;
   #controlsFilter = null;
   #pointModel = null;
+  #filterModel = null;
+  #sortComponent = null;
   #contentList = new ContentList();
-  #currentFilter = FilterType.EVERYTHING;
   #currentSort = SortType.DAY;
   #pointPresenters = new Map();
 
-  constructor({ headerContainer, mainContainer, controlsFilter }) {
+  constructor({ headerContainer, mainContainer, controlsFilter, pointsModel, filterModel }) {
     this.#headerContainer = headerContainer;
     this.#mainContainer = mainContainer;
     this.#controlsFilter = controlsFilter;
-    this.#pointModel = new PointModel();
+    this.#pointModel = pointsModel;
+    this.#filterModel = filterModel;
+    this.#pointModel.addObserver(this.#handleModelEvent);
+    this.#filterModel.addObserver(this.#handleModelEvent);
   }
 
   init() {
-    this.#pointModel.addObserver(this.#handleModelEvent);
     this.#pointModel.init();
   }
 
@@ -43,8 +44,13 @@ export default class TripPresenter {
         break;
 
       case UpdateType.MINOR:
+        this.#clearPoints();
+        this.#renderPoints();
+        break;
+
       case UpdateType.MAJOR:
         this.#clearPoints({ resetSortType: true });
+        this.#renderSort();
         this.#renderPoints();
         break;
 
@@ -71,25 +77,25 @@ export default class TripPresenter {
   #renderBoard() {
     const points = this.#pointModel.getPoints();
     const destinations = this.#pointModel.getDestinations();
-    const activeFilters = {
-      [FilterType.EVERYTHING]: points.length > 0,
-      [FilterType.FUTURE]: filterFunctions[FilterType.FUTURE](points).length > 0,
-      [FilterType.PRESENT]: filterFunctions[FilterType.PRESENT](points).length > 0,
-      [FilterType.PAST]: filterFunctions[FilterType.PAST](points).length > 0,
-    };
 
     render(new TripInfoView(points, destinations), this.#headerContainer, RenderPosition.AFTERBEGIN);
-    render(new FilterView({ filters: activeFilters, onFilterChange: this.#handleFilterChange }), this.#controlsFilter, RenderPosition.BEFOREEND);
-    render(new SortView({ onSortChange: this.#handleSortChange }), this.#mainContainer, RenderPosition.BEFOREEND);
+    this.#renderSort();
     render(this.#contentList, this.#mainContainer, RenderPosition.BEFOREEND);
     this.#renderPoints();
   }
 
-  #handleFilterChange = (filterType) => {
-    this.#currentFilter = filterType;
-    this.#clearPoints({ resetSortType: true });
-    this.#renderPoints();
-  };
+  #renderSort() {
+    if (this.#sortComponent !== null) {
+      remove(this.#sortComponent);
+    }
+
+    this.#sortComponent = new SortView({
+      currentSortType: this.#currentSort,
+      onSortChange: this.#handleSortChange
+    });
+
+    render(this.#sortComponent, this.#mainContainer, RenderPosition.AFTERBEGIN);
+  }
 
   #handleSortChange = (sortType) => {
     if (this.#currentSort === sortType) {
@@ -105,12 +111,13 @@ export default class TripPresenter {
   }
 
   #renderPoints() {
+    const filterType = this.#filterModel.getFilter();
     const points = this.#pointModel.getPoints();
-    const filteredPoints = filterFunctions[this.#currentFilter](points);
+    const filteredPoints = filterFunctions[filterType](points);
     const sortedPoints = this.#applySort(filteredPoints);
 
     if (!sortedPoints.length) {
-      render(new NoPointsView(this.#currentFilter), this.#contentList.element, RenderPosition.BEFOREEND);
+      render(new NoPointsView(filterType), this.#contentList.element, RenderPosition.BEFOREEND);
       return;
     }
 
