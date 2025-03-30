@@ -3,12 +3,14 @@ import TripInfoView from '../view/trip-info-view.js';
 import ContentList from '../view/content-list.js';
 import NoPointsView from '../view/no-points-view.js';
 import { render, RenderPosition, remove } from '../framework/render.js';
-import { SortType, UpdateType, UserAction } from '../const.js';
+import { SortType, FilterType, UpdateType, UserAction } from '../const.js';
 import { filterFunctions } from '../utils/filter.js';
 import { sortFunctions } from '../utils/sort.js';
 import PointPresenter from './point-presenter.js';
+import NewPointPresenter from './new-point-presenter.js';
 
 export default class TripPresenter {
+  #newPointPresenter = null;
   #headerContainer = null;
   #mainContainer = null;
   #controlsFilter = null;
@@ -20,6 +22,11 @@ export default class TripPresenter {
   #pointPresenters = new Map();
 
   constructor({ headerContainer, mainContainer, controlsFilter, pointsModel, filterModel }) {
+    this.#newPointPresenter = new NewPointPresenter({
+      contentList: this.#contentList,
+      onDataChange: this.#handleUserAction,
+      onDestroy: this.#handleNewPointFormClose
+    });
     this.#headerContainer = headerContainer;
     this.#mainContainer = mainContainer;
     this.#controlsFilter = controlsFilter;
@@ -143,6 +150,28 @@ export default class TripPresenter {
       this.#currentSort = SortType.DAY;
     }
   }
+
+  createPoint() {
+    if (this.#newPointPresenter.isActive()) {
+      return;
+    }
+    this.#resetAllPointsView();
+    this.#filterModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
+    this.#handleModelEvent(UpdateType.MAJOR);
+
+    this.#newPointPresenter.init(
+      this.#pointModel.getDestinations(),
+      this.#pointModel.getOffers()
+    );
+
+    document.querySelector('.trip-main__event-add-btn').disabled = true;
+  }
+
+
+  #handleNewPointFormClose = () => {
+    this.#newPointPresenter.destroy();
+    document.querySelector('.trip-main__event-add-btn').disabled = false;
+  };
 
   #resetAllPointsView = () => {
     this.#pointPresenters.forEach((presenter) => presenter.resetView());

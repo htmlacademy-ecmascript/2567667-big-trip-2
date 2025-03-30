@@ -66,7 +66,11 @@ export default class PointPresenter {
   };
 
   #handleFormSubmit = (updatedPoint) => {
-    this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
+    if (updatedPoint.__delete) {
+      this.#onDataChange(UserAction.DELETE_POINT, UpdateType.MINOR, this.#point);
+    } else {
+      this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
+    }
     this.#replaceFormToCard();
   };
 

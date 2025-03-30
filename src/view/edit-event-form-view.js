@@ -41,7 +41,7 @@ function createOffersTemplate(availableOffers, selectedOfferIds) {
     : '<p class="event__no-offers">No available offers</p>';
 }
 
-function createEditEventFormTemplate(state, destinations) {
+function createEditEventFormTemplate(state, destinations, isNew) {
   const { id, dateFrom, dateTo, destination, type, basePrice, availableOffers, selectedOfferIds } = state;
   const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
   const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
@@ -80,7 +80,7 @@ function createEditEventFormTemplate(state, destinations) {
           </div>
 
           <button class="event__save-btn btn btn--blue" type="submit">Save</button>
-          <button class="event__reset-btn" type="reset">Cancel</button>
+          <button class="event__reset-btn" type="reset">${isNew ? 'Cancel' : 'Delete'}</button>
           <button class="event__rollup-btn" type="button">
             <span class="visually-hidden">Open event</span>
           </button>
@@ -114,26 +114,39 @@ export default class EditEventFormView extends AbstractStatefulView {
   #onEditClose = null;
   #datepickerFrom = null;
   #datepickerTo = null;
+  #isNew = false;
 
-  constructor({ point, offers, destinations, onFormSubmit, onEditClose }) {
+  constructor({ point, offers, destinations, onFormSubmit, onEditClose, isNew }) {
     super();
     this.#offers = offers;
     this.#destinations = destinations;
     this.#onFormSubmit = onFormSubmit;
     this.#onEditClose = onEditClose;
-    const allOffersByType = offers.find((o) => o.type === point.type)?.offers || [];
+    this.#isNew = isNew;
+
+    const basePoint = point ?? {
+      basePrice: 0,
+      dateFrom: new Date().toISOString(),
+      dateTo: new Date().toISOString(),
+      destination: destinations[0]?.id || null,
+      isFavorite: false,
+      offers: [],
+      type: 'flight'
+    };
+
+    const allOffersByType = offers.find((o) => o.type === basePoint.type)?.offers || [];
 
     this._setState({
-      ...EditEventFormView.parsePointToState(point),
+      ...EditEventFormView.parsePointToState(basePoint),
       availableOffers: allOffersByType,
-      selectedOfferIds: point.offers
+      selectedOfferIds: basePoint.offers
     });
 
     this._restoreHandlers();
   }
 
   get template() {
-    return createEditEventFormTemplate(this._state, this.#destinations);
+    return createEditEventFormTemplate(this._state, this.#destinations, this.#isNew);
   }
 
   static parsePointToState(point) {
@@ -157,6 +170,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     this.element.querySelector('.event__input--destination').addEventListener('change', this.#handleDestinationChange);
     this.element.querySelector('.event__input--price').addEventListener('change', this.#handlePriceChange);
     this.element.querySelector('.event__available-offers').addEventListener('change', this.#handleOfferChange);
+    this.element.querySelector('.event__reset-btn').addEventListener('click', this.#handleDeleteClick);
     this.#setDatepickers();
   }
 
@@ -223,6 +237,19 @@ export default class EditEventFormView extends AbstractStatefulView {
     evt.preventDefault();
     this.#onFormSubmit(EditEventFormView.parseStateToPoint(this._state));
   };
+
+  #handleDeleteClick = (evt) => {
+    evt.preventDefault();
+    if (this.#isNew) {
+      this.#onEditClose();
+      return;
+    }
+    this.#onFormSubmit({
+      ...EditEventFormView.parseStateToPoint(this._state),
+      __delete: true
+    });
+  };
+
 
   #handleEditClose = (evt) => {
     evt.preventDefault();
