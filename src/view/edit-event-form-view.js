@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import { EVENT_TYPES } from '../const.js';
+import he from 'he';
 
 function createEventTypeListTemplate(type, id) {
   return `
@@ -32,7 +33,7 @@ function createOffersTemplate(availableOffers, selectedOfferIds) {
           ${selectedOfferIds.includes(offer.id) ? 'checked' : ''}
         >
         <label class="event__offer-label" for="event-offer-${offer.id}">
-          <span class="event__offer-title">${offer.title}</span>
+          <span class="event__offer-title">${he.encode(offer.title)}</span>
           &plus;&euro;&nbsp;
           <span class="event__offer-price">${offer.price}</span>
         </label>
@@ -62,9 +63,9 @@ function createEditEventFormTemplate(state, destinations, isNew) {
 
           <div class="event__field-group event__field-group--destination">
             <label class="event__label event__type-output" for="event-destination-${id}">${type}</label>
-            <input class="event__input event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${destinationData.name}" list="destination-list-${id}">
+            <input class="event__input event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${he.encode(destinationData.name)}" list="destination-list-${id}">
             <datalist id="destination-list-${id}">
-              ${destinations.map((dest) => `<option value="${dest.name}"></option>`).join('')}
+              ${destinations.map((dest) => `<option value="${he.encode(dest.name)}"></option>`).join('')}
             </datalist>
           </div>
 
@@ -76,7 +77,7 @@ function createEditEventFormTemplate(state, destinations, isNew) {
 
           <div class="event__field-group event__field-group--price">
             <label class="event__label">&euro;</label>
-            <input class="event__input event__input--price" type="text" name="event-price" value="${basePrice}">
+            <input class="event__input event__input--price" type="number" name="event-price" value="${basePrice}" min="0" step="1" required>
           </div>
 
           <button class="event__save-btn btn btn--blue" type="submit">Save</button>
@@ -94,7 +95,7 @@ function createEditEventFormTemplate(state, destinations, isNew) {
 
           <section class="event__section event__section--destination">
             <h3 class="event__section-title event__section-title--destination">Destination</h3>
-            <p class="event__destination-description">${destinationData.description}</p>
+            <p class="event__destination-description">${he.encode(destinationData.description)}</p>
             <div class="event__photos-container">
               <div class="event__photos-tape">
                 ${destinationData.pictures.map((pic) => `<img class="event__photo" src="${pic.src}" alt="Event photo">`).join('')}
@@ -250,7 +251,6 @@ export default class EditEventFormView extends AbstractStatefulView {
     });
   };
 
-
   #handleEditClose = (evt) => {
     evt.preventDefault();
     if (this.#onEditClose) {
@@ -271,11 +271,15 @@ export default class EditEventFormView extends AbstractStatefulView {
   };
 
   #handleDestinationChange = (evt) => {
-    const selectedDest = this.#destinations.find((d) => d.name === evt.target.value);
+    const inputValue = he.decode(evt.target.value);
+    const selectedDest = this.#destinations.find((d) => d.name === inputValue);
     if (selectedDest) {
       this.updateElement({
         ...this._state,
-        destination: selectedDest.id });
+        destination: selectedDest.id
+      });
+    } else {
+      evt.target.value = '';
     }
   };
 
@@ -284,7 +288,8 @@ export default class EditEventFormView extends AbstractStatefulView {
     if (!isNaN(value)) {
       this.updateElement({
         ...this._state,
-        basePrice: value });
+        basePrice: value
+      });
     }
   };
 
