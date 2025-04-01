@@ -1,6 +1,7 @@
 import { render, replace, remove, RenderPosition } from '../framework/render.js';
 import EventPointView from '../view/event-point-view.js';
 import EditEventFormView from '../view/edit-event-form-view.js';
+import { UserAction, UpdateType } from '../const.js';
 
 export default class PointPresenter {
   #contentList = null;
@@ -8,15 +9,13 @@ export default class PointPresenter {
   #offers = null;
   #destinations = null;
   #onDataChange = null;
-  #onFavoriteChange = null;
   #onResetView = null;
   #pointComponent = null;
   #pointEditComponent = null;
 
-  constructor({ contentList, onDataChange, onFavoriteChange, onResetView }) {
+  constructor({ contentList, onDataChange, onResetView }) {
     this.#contentList = contentList;
     this.#onDataChange = onDataChange;
-    this.#onFavoriteChange = onFavoriteChange;
     this.#onResetView = onResetView;
   }
 
@@ -67,13 +66,17 @@ export default class PointPresenter {
   };
 
   #handleFormSubmit = (updatedPoint) => {
+    if (updatedPoint.__delete) {
+      this.#onDataChange(UserAction.DELETE_POINT, UpdateType.MINOR, this.#point);
+    } else {
+      this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
+    }
     this.#replaceFormToCard();
-    this.#onDataChange(updatedPoint);
   };
 
   #handleFavoriteClick = () => {
     const updatedPoint = { ...this.#point, isFavorite: !this.#point.isFavorite };
-    this.#onFavoriteChange(updatedPoint);
+    this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
   };
 
   resetView() {
