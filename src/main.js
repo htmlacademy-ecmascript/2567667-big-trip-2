@@ -19,7 +19,6 @@ const newEventButton = document.querySelector('.trip-main__event-add-btn');
 const tripPresenter = new TripPresenter({
   headerContainer: headerElement,
   mainContainer: mainElement,
-  controlsFilter: controlsElement,
   pointsModel,
   filterModel
 });

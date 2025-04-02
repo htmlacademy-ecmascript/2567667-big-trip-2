@@ -1,19 +1,6 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 
-function getRandomArrayElement(items) {
-  return items[Math.floor(Math.random() * items.length)];
-}
-
-function getRandomInteger (min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function getRandomNumber(number) {
-  const randomNumber = Math.floor(Math.random() * (number - 0 + 1) + 0).toFixed(0);
-  return Number(randomNumber);
-}
-
 dayjs.extend(duration);
 
 export function calculateDuration(dateFrom, dateTo) {
@@ -29,5 +16,3 @@ export function calculateDuration(dateFrom, dateTo) {
     return `${diff.minutes()}M`;
   }
 }
-
-export { getRandomArrayElement, getRandomInteger, getRandomNumber };

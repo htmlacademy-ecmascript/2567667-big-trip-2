@@ -14,7 +14,6 @@ export default class TripPresenter {
   #newPointPresenter = null;
   #headerContainer = null;
   #mainContainer = null;
-  #controlsFilter = null;
   #pointModel = null;
   #filterModel = null;
   #sortComponent = null;
@@ -24,7 +23,7 @@ export default class TripPresenter {
   #loadingComponent = new LoadingView();
   #isLoading = true;
 
-  constructor({ headerContainer, mainContainer, controlsFilter, pointsModel, filterModel }) {
+  constructor({ headerContainer, mainContainer, pointsModel, filterModel }) {
     this.#newPointPresenter = new NewPointPresenter({
       contentList: this.#contentList,
       onDataChange: this.#handleUserAction,
@@ -32,7 +31,6 @@ export default class TripPresenter {
     });
     this.#headerContainer = headerContainer;
     this.#mainContainer = mainContainer;
-    this.#controlsFilter = controlsFilter;
     this.#pointModel = pointsModel;
     this.#filterModel = filterModel;
     this.#pointModel.addObserver(this.#handleModelEvent);
@@ -175,7 +173,6 @@ export default class TripPresenter {
 
     document.querySelector('.trip-main__event-add-btn').disabled = true;
   }
-
 
   #handleNewPointFormClose = () => {
     this.#newPointPresenter.destroy();
