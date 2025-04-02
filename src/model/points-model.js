@@ -1,22 +1,15 @@
-import { mockDestinations } from '../mock/destinations.js';
-import { mockOffers } from '../mock/offers.js';
-import { getRandomPoints } from '../mock/points.js';
 import Observable from '../framework/observable.js';
+import { UpdateType } from '../const.js';
 
 export default class PointModel extends Observable {
   #points = [];
   #offers = [];
   #destinations = [];
+  #api = null;
 
-  constructor() {
+  constructor(apiService) {
     super();
-  }
-
-  init() {
-    this.#points = getRandomPoints();
-    this.#offers = mockOffers;
-    this.#destinations = mockDestinations;
-    this._notify('INIT');
+    this.#api = apiService;
   }
 
   getPoints() {
@@ -29,6 +22,27 @@ export default class PointModel extends Observable {
 
   getDestinations() {
     return this.#destinations;
+  }
+
+  async init() {
+    try {
+      const [points, offers, destinations] = await Promise.all([
+        this.#api.points,
+        this.#api.offers,
+        this.#api.destinations,
+      ]);
+
+      this.#points = points.map(this.#adaptToClient);
+      this.#offers = offers;
+      this.#destinations = destinations;
+
+    } catch (err) {
+      this.#points = [];
+      this.#offers = [];
+      this.#destinations = [];
+    }
+
+    this._notify(UpdateType.INIT);
   }
 
   updatePoint(updateType, update) {
@@ -63,5 +77,15 @@ export default class PointModel extends Observable {
     ];
 
     this._notify(updateType);
+  }
+
+  #adaptToClient(point) {
+    return {
+      ...point,
+      basePrice: point['base_price'],
+      dateFrom: point['date_from'],
+      dateTo: point['date_to'],
+      isFavorite: point['is_favorite'],
+    };
   }
 }
