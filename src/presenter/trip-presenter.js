@@ -8,6 +8,7 @@ import { filterFunctions } from '../utils/filter.js';
 import { sortFunctions } from '../utils/sort.js';
 import PointPresenter from './point-presenter.js';
 import NewPointPresenter from './new-point-presenter.js';
+import LoadingView from '../view/loading-view.js';
 
 export default class TripPresenter {
   #newPointPresenter = null;
@@ -20,6 +21,8 @@ export default class TripPresenter {
   #contentList = new ContentList();
   #currentSort = SortType.DAY;
   #pointPresenters = new Map();
+  #loadingComponent = new LoadingView();
+  #isLoading = true;
 
   constructor({ headerContainer, mainContainer, controlsFilter, pointsModel, filterModel }) {
     this.#newPointPresenter = new NewPointPresenter({
@@ -37,6 +40,7 @@ export default class TripPresenter {
   }
 
   init() {
+    render(this.#loadingComponent, this.#mainContainer, RenderPosition.BEFOREEND);
     this.#pointModel.init();
   }
 
@@ -62,6 +66,8 @@ export default class TripPresenter {
         break;
 
       case UpdateType.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingComponent);
         this.#renderBoard();
         break;
     }
@@ -82,6 +88,9 @@ export default class TripPresenter {
   };
 
   #renderBoard() {
+    if (this.#isLoading) {
+      return;
+    }
     const points = this.#pointModel.getPoints();
     const destinations = this.#pointModel.getDestinations();
 

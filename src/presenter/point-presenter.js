@@ -65,13 +65,20 @@ export default class PointPresenter {
     }
   };
 
-  #handleFormSubmit = (updatedPoint) => {
-    if (updatedPoint.__delete) {
-      this.#onDataChange(UserAction.DELETE_POINT, UpdateType.MINOR, this.#point);
-    } else {
-      this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
+  #handleFormSubmit = async (updatedPoint) => {
+    try {
+      // ждем сначала сервер , пока он подтвердит обновление
+      await this.#onDataChange(
+        UserAction.UPDATE_POINT,
+        UpdateType.MINOR,
+        updatedPoint
+      );
+      this.#replaceFormToCard();
+    } catch {
+      // если ошибка - оставляем форму открытой , показываем сообщение
+      // eslint-disable-next-line no-console
+      console.error('не удалось обновить точку , bruuuh');
     }
-    this.#replaceFormToCard();
   };
 
   #handleFavoriteClick = () => {
