@@ -1,7 +1,6 @@
 import { render, remove, RenderPosition } from '../framework/render.js';
 import EditEventFormView from '../view/edit-event-form-view.js';
 import { UserAction, UpdateType } from '../const.js';
-import { nanoid } from 'nanoid';
 
 const { AFTERBEGIN } = RenderPosition;
 
@@ -54,13 +53,19 @@ export default class NewPointPresenter {
     this.#handleDestroy?.();
   }
 
-  #handleFormSubmit = (point) => {
-    this.#handleDataChange(
-      UserAction.ADD_POINT,
-      UpdateType.MAJOR,
-      { ...point, id: nanoid() }
-    );
-    this.destroy();
+  #handleFormSubmit = async (point) => {
+    this.#pointEditComponent.setSaving();
+
+    try {
+      await this.#handleDataChange(
+        UserAction.ADD_POINT,
+        UpdateType.MAJOR,
+        point
+      );
+      this.destroy();
+    } catch {
+      this.#pointEditComponent.setAborting();
+    }
   };
 
   #handleCancelClick = () => {

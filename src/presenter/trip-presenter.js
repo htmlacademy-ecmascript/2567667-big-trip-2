@@ -14,7 +14,6 @@ export default class TripPresenter {
   #newPointPresenter = null;
   #headerContainer = null;
   #mainContainer = null;
-  #controlsFilter = null;
   #pointModel = null;
   #filterModel = null;
   #sortComponent = null;
@@ -23,8 +22,10 @@ export default class TripPresenter {
   #pointPresenters = new Map();
   #loadingComponent = new LoadingView();
   #isLoading = true;
+  #tripInfoComponent = null;
+  #onNewPointFormClose = null;
 
-  constructor({ headerContainer, mainContainer, controlsFilter, pointsModel, filterModel }) {
+  constructor({ headerContainer, mainContainer, pointsModel, filterModel }) {
     this.#newPointPresenter = new NewPointPresenter({
       contentList: this.#contentList,
       onDataChange: this.#handleUserAction,
@@ -32,11 +33,14 @@ export default class TripPresenter {
     });
     this.#headerContainer = headerContainer;
     this.#mainContainer = mainContainer;
-    this.#controlsFilter = controlsFilter;
     this.#pointModel = pointsModel;
     this.#filterModel = filterModel;
     this.#pointModel.addObserver(this.#handleModelEvent);
     this.#filterModel.addObserver(this.#handleModelEvent);
+  }
+
+  setNewPointFormCloseHandler(callback) {
+    this.#onNewPointFormClose = callback;
   }
 
   init() {
@@ -61,6 +65,10 @@ export default class TripPresenter {
 
       case UpdateType.MAJOR:
         this.#clearPoints({ resetSortType: true });
+        this.#renderTripInfo(
+          this.#pointModel.getPoints(),
+          this.#pointModel.getDestinations()
+        );
         this.#renderSort();
         this.#renderPoints();
         break;
@@ -91,13 +99,23 @@ export default class TripPresenter {
     if (this.#isLoading) {
       return;
     }
+
     const points = this.#pointModel.getPoints();
     const destinations = this.#pointModel.getDestinations();
 
-    render(new TripInfoView(points, destinations), this.#headerContainer, RenderPosition.AFTERBEGIN);
+    this.#renderTripInfo(points, destinations);
     this.#renderSort();
     render(this.#contentList, this.#mainContainer, RenderPosition.BEFOREEND);
     this.#renderPoints();
+  }
+
+  #renderTripInfo(points, destinations) {
+    if (this.#tripInfoComponent) {
+      remove(this.#tripInfoComponent);
+    }
+
+    this.#tripInfoComponent = new TripInfoView(points, destinations);
+    render(this.#tripInfoComponent, this.#headerContainer, RenderPosition.AFTERBEGIN);
   }
 
   #renderSort() {
@@ -172,14 +190,11 @@ export default class TripPresenter {
       this.#pointModel.getDestinations(),
       this.#pointModel.getOffers()
     );
-
-    document.querySelector('.trip-main__event-add-btn').disabled = true;
   }
-
 
   #handleNewPointFormClose = () => {
     this.#newPointPresenter.destroy();
-    document.querySelector('.trip-main__event-add-btn').disabled = false;
+    this.#onNewPointFormClose?.();
   };
 
   #resetAllPointsView = () => {
