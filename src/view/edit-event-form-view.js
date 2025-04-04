@@ -42,8 +42,8 @@ function createOffersTemplate(availableOffers, selectedOfferIds) {
     : '<p class="event__no-offers">No available offers</p>';
 }
 
-function createEditEventFormTemplate(state, destinations, isNew) {
-  const { id, dateFrom, dateTo, destination, type, basePrice, availableOffers, selectedOfferIds } = state;
+function createEditEventFormTemplate(state, destinations) {
+  const { id, dateFrom, dateTo, destination, type, basePrice, availableOffers, selectedOfferIds, isSaving, isDeleting, isDisabled } = state;
   const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
   const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
   const destinationData = destinations.find((dest) => dest.id === destination) || { name: '', description: '', pictures: [] };
@@ -80,8 +80,8 @@ function createEditEventFormTemplate(state, destinations, isNew) {
             <input class="event__input event__input--price" type="number" name="event-price" value="${basePrice}" min="0" step="1" required>
           </div>
 
-          <button class="event__save-btn btn btn--blue" type="submit">Save</button>
-          <button class="event__reset-btn" type="reset">${isNew ? 'Cancel' : 'Delete'}</button>
+          <button class="event__save-btn btn btn--blue" type="submit" ${isDisabled ? 'disabled' : ''}>${isSaving ? 'Saving...' : 'Save'}</button>
+          <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>${isDeleting ? 'Deleting...' : 'Delete'}</button>
           <button class="event__rollup-btn" type="button">
             <span class="visually-hidden">Open event</span>
           </button>
@@ -115,15 +115,13 @@ export default class EditEventFormView extends AbstractStatefulView {
   #onEditClose = null;
   #datepickerFrom = null;
   #datepickerTo = null;
-  #isNew = false;
 
-  constructor({ point, offers, destinations, onFormSubmit, onEditClose, isNew }) {
+  constructor({ point, offers, destinations, onFormSubmit, onEditClose }) {
     super();
     this.#offers = offers;
     this.#destinations = destinations;
     this.#onFormSubmit = onFormSubmit;
     this.#onEditClose = onEditClose;
-    this.#isNew = isNew;
 
     const basePoint = point ?? {
       basePrice: 0,
@@ -147,12 +145,15 @@ export default class EditEventFormView extends AbstractStatefulView {
   }
 
   get template() {
-    return createEditEventFormTemplate(this._state, this.#destinations, this.#isNew);
+    return createEditEventFormTemplate(this._state, this.#destinations);
   }
 
   static parsePointToState(point) {
     return {
-      ...point
+      ...point,
+      isDisabled: false,
+      isSaving: false,
+      isDeleting: false,
     };
   }
 
@@ -161,6 +162,9 @@ export default class EditEventFormView extends AbstractStatefulView {
     point.offers = state.selectedOfferIds;
     delete point.availableOffers;
     delete point.selectedOfferIds;
+    delete point.isDisabled;
+    delete point.isSaving;
+    delete point.isDeleting;
     return point;
   }
 
@@ -241,10 +245,6 @@ export default class EditEventFormView extends AbstractStatefulView {
 
   #handleDeleteClick = (evt) => {
     evt.preventDefault();
-    if (this.#isNew) {
-      this.#onEditClose();
-      return;
-    }
     this.#onFormSubmit({
       ...EditEventFormView.parseStateToPoint(this._state),
       __delete: true
@@ -303,6 +303,33 @@ export default class EditEventFormView extends AbstractStatefulView {
       selectedOfferIds: checkedOfferIds
     });
   };
+
+  setSaving() {
+    this.updateElement({
+      ...this._state,
+      isDisabled: true,
+      isSaving: true,
+    });
+  }
+
+  setDeleting() {
+    this.updateElement({
+      ...this._state,
+      isDisabled: true,
+      isDeleting: true,
+    });
+  }
+
+  setAborting() {
+    this.updateElement({
+      ...this._state,
+      isDisabled: false,
+      isSaving: false,
+      isDeleting: false,
+    });
+
+    this.shake();
+  }
 
   removeElement() {
     super.removeElement();

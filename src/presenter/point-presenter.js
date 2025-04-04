@@ -66,18 +66,22 @@ export default class PointPresenter {
   };
 
   #handleFormSubmit = async (updatedPoint) => {
+    if (updatedPoint.__delete) {
+      this.#pointEditComponent.setDeleting();
+      try {
+        await this.#onDataChange(UserAction.DELETE_POINT, UpdateType.MINOR, updatedPoint);
+        setTimeout(() => this.#replaceFormToCard(), 1000);
+      } catch {
+        this.#pointEditComponent.setAborting();
+      }
+      return;
+    }
+    this.#pointEditComponent.setSaving();
     try {
-      // ждем сначала сервер , пока он подтвердит обновление
-      await this.#onDataChange(
-        UserAction.UPDATE_POINT,
-        UpdateType.MINOR,
-        updatedPoint
-      );
-      this.#replaceFormToCard();
+      await this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
+      setTimeout(() => this.#replaceFormToCard(), 1000);
     } catch {
-      // если ошибка - оставляем форму открытой , показываем сообщение
-      // eslint-disable-next-line no-console
-      console.error('не удалось обновить точку , bruuuh');
+      this.#pointEditComponent.setAborting();
     }
   };
 
