@@ -113,10 +113,11 @@ export default class TripPresenter {
     if (this.#tripInfoComponent) {
       remove(this.#tripInfoComponent);
     }
-
-    this.#tripInfoComponent = new TripInfoView(points, destinations);
+    const offers = this.#pointModel.getOffers();
+    this.#tripInfoComponent = new TripInfoView(points, destinations, offers);
     render(this.#tripInfoComponent, this.#headerContainer, RenderPosition.AFTERBEGIN);
   }
+
 
   #renderSort() {
     if (this.#sortComponent !== null) {
