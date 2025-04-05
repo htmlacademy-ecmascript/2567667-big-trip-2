@@ -1,6 +1,6 @@
 import { render, remove, RenderPosition } from '../framework/render.js';
 import EditEventFormView from '../view/edit-event-form-view.js';
-import { UserAction, UpdateType } from '../const.js';
+import { UserAction, UpdateType, BLANK_POINT } from '../const.js';
 
 export default class NewPointPresenter {
   #contentList = null;
@@ -19,19 +19,27 @@ export default class NewPointPresenter {
   }
 
   init(destinations, offers) {
-    if (this.#pointEditComponent !== null) {
-      return;
-    }
+    this.destroy();
 
     this.#destinations = destinations;
     this.#offers = offers;
 
+    const initialPoint = {
+      ...BLANK_POINT,
+      dateFrom: null,
+      dateTo: null,
+      destination: null
+    };
+
     this.#pointEditComponent = new EditEventFormView({
+      point: {
+        ...initialPoint,
+        isCreating: true
+      },
       offers: this.#offers,
       destinations: this.#destinations,
       onFormSubmit: this.#handleFormSubmit,
-      onEditClose: this.#handleCancelClick,
-      isNew: true
+      onEditClose: this.#handleCancelClick
     });
 
     render(this.#pointEditComponent, this.#contentList.element, RenderPosition.AFTERBEGIN);
@@ -62,11 +70,7 @@ export default class NewPointPresenter {
     this.#pointEditComponent.setSaving();
 
     try {
-      await this.#handleDataChange(
-        UserAction.ADD_POINT,
-        UpdateType.MAJOR,
-        point
-      );
+      await this.#handleDataChange(UserAction.ADD_POINT, UpdateType.MAJOR, point);
       this.destroy();
     } catch {
       this.#pointEditComponent.setAborting();

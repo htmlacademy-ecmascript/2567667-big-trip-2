@@ -2,7 +2,7 @@ import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import dayjs from 'dayjs';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-import { EVENT_TYPES } from '../const.js';
+import { EVENT_TYPES, BLANK_POINT } from '../const.js';
 import he from 'he';
 
 function createEventTypeListTemplate(type, id) {
@@ -44,7 +44,21 @@ function createOffersTemplate(availableOffers, selectedOfferIds) {
   }).join('');
 }
 
-function createEditEventFormTemplate(state, destinations) {
+function createButtonTemplate(isCreating, isDeleting, isDisabled) {
+  if (isCreating) {
+    return `
+      <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>Cancel</button>
+    `;
+  }
+  return `
+    <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>${isDeleting ? 'Deleting...' : 'Delete'}</button>
+    <button class="event__rollup-btn" type="button" ${isDisabled ? 'disabled' : ''}>
+      <span class="visually-hidden">Open event</span>
+    </button>
+  `;
+}
+
+function createEditEventFormTemplate(state, destinations, isCreating = false) {
   const {
     id,
     dateFrom,
@@ -59,8 +73,8 @@ function createEditEventFormTemplate(state, destinations) {
     isDisabled
   } = state;
 
-  const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
-  const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
+  const formattedDateFrom = dateFrom ? dayjs(dateFrom).format('DD/MM/YY HH:mm') : '';
+  const formattedDateTo = dateTo ? dayjs(dateTo).format('DD/MM/YY HH:mm') : '';
   const destinationData = destinations.find((dest) => dest.id === destination) || {
     name: '',
     description: '',
@@ -99,80 +113,52 @@ function createEditEventFormTemplate(state, destinations) {
           </div>
 
           <div class="event__field-group event__field-group--time">
-            <input
-              id="event-start-time-${id}"
-              class="event__input event__input--time"
-              type="text"
-              name="event-start-time"
-              value="${formattedDateFrom}">
+            <input id="event-start-time-${id}" class="event__input event__input--time" type="text" name="event-start-time" value="${formattedDateFrom}">
             &mdash;
-            <input
-              id="event-end-time-${id}"
-              class="event__input event__input--time"
-              type="text"
-              name="event-end-time"
-              value="${formattedDateTo}">
+            <input id="event-end-time-${id}" class="event__input event__input--time" type="text" name="event-end-time" value="${formattedDateTo}">
           </div>
 
           <div class="event__field-group event__field-group--price">
             <label class="event__label">&euro;</label>
-            <input
-              class="event__input event__input--price"
-              type="number"
-              name="event-price"
-              value="${basePrice}"
-              min="0"
-              step="1"
-              required>
+            <input class="event__input event__input--price" type="number" name="event-price" value="${basePrice}" min="0" step="1" required>
           </div>
 
           <button class="event__save-btn btn btn--blue" type="submit" ${isDisabled ? 'disabled' : ''}>
             ${isSaving ? 'Saving...' : 'Save'}
           </button>
-          <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>
-            ${isDeleting ? 'Deleting...' : 'Delete'}
-          </button>
-          <button class="event__rollup-btn" type="button">
-            <span class="visually-hidden">Open event</span>
-          </button>
+
+          ${createButtonTemplate(isCreating, isDeleting, isDisabled)}
+
         </header>
 
         <section class="event__details">
           ${availableOffers.length > 0
     ? `<section class="event__section event__section--offers">
-                <h3 class="event__section-title event__section-title--offers">Offers</h3>
-                <div class="event__available-offers">
-                  ${createOffersTemplate(availableOffers, selectedOfferIds)}
-                </div>
-              </section>`
-    : ''
-}
+                  <h3 class="event__section-title event__section-title--offers">Offers</h3>
+                  <div class="event__available-offers">
+                    ${createOffersTemplate(availableOffers, selectedOfferIds)}
+                  </div>
+                </section>` : ''}
 
           ${shouldShowDestinationSection
     ? `<section class="event__section event__section--destination">
-                <h3 class="event__section-title event__section-title--destination">Destination</h3>
-                ${hasDescription
-    ? `<p class="event__destination-description">${he.encode(destinationData.description)}</p>`
-    : ''
-}
-                ${hasPictures
+                  <h3 class="event__section-title event__section-title--destination">Destination</h3>
+                  ${hasDescription ? `<p class="event__destination-description">${he.encode(destinationData.description)}</p>` : ''}
+                  ${hasPictures
     ? `<div class="event__photos-container">
-                      <div class="event__photos-tape">
-                        ${destinationData.pictures.map((pic) =>
+                        <div class="event__photos-tape">
+                          ${destinationData.pictures.map((pic) =>
     `<img class="event__photo" src="${pic.src}" alt="Event photo">`
   ).join('')}
-                      </div>
-                    </div>`
-    : ''
-}
-              </section>`
-    : ''
-}
+                        </div>
+                      </div>` : ''}
+                </section>` : ''}
         </section>
       </form>
     </li>
   `;
 }
+
 
 export default class EditEventFormView extends AbstractStatefulView {
   #offers = null;
@@ -190,13 +176,8 @@ export default class EditEventFormView extends AbstractStatefulView {
     this.#onEditClose = onEditClose;
 
     const basePoint = point ?? {
-      basePrice: 0,
-      dateFrom: new Date().toISOString(),
-      dateTo: new Date().toISOString(),
-      destination: destinations[0]?.id || null,
-      isFavorite: false,
-      offers: [],
-      type: 'flight'
+      ...BLANK_POINT,
+      destination: destinations[0]?.id || null
     };
 
     const allOffersByType = offers.find((o) => o.type === basePoint.type)?.offers || [];
@@ -209,7 +190,7 @@ export default class EditEventFormView extends AbstractStatefulView {
   }
 
   get template() {
-    return createEditEventFormTemplate(this._state, this.#destinations);
+    return createEditEventFormTemplate(this._state, this.#destinations, this._state.isCreating);
   }
 
   static parsePointToState(point) {
@@ -250,7 +231,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     return flatpickr(element, {
       enableTime: true,
       dateFormat: 'd/m/y H:i',
-      defaultDate,
+      defaultDate: defaultDate || undefined,
       ...(minDate && { minDate }),
       onChange,
     });

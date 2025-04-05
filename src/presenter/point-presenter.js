@@ -12,11 +12,13 @@ export default class PointPresenter {
   #pointComponent = null;
   #pointEditComponent = null;
   #setActiveEditForm = null;
+  #onResetView = null;
 
-  constructor({ contentList, onDataChange, setActiveEditForm }) {
+  constructor({ contentList, onDataChange, setActiveEditForm, onResetView }) {
     this.#contentList = contentList;
     this.#onDataChange = onDataChange;
     this.#setActiveEditForm = setActiveEditForm;
+    this.#onResetView = onResetView;
   }
 
   init(point, destinations, offers) {
@@ -57,6 +59,7 @@ export default class PointPresenter {
       return;
     }
 
+    this.#onResetView?.();
     replace(this.#pointEditComponent, this.#pointComponent);
 
     requestAnimationFrame(() => {
