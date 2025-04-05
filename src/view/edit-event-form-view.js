@@ -265,25 +265,26 @@ export default class EditEventFormView extends AbstractStatefulView {
 
   #handleDateFromChange = ([userDate]) => {
     const newDateFrom = userDate.toISOString();
-    const updatedDateTo = dayjs(this._state.dateTo).isBefore(dayjs(newDateFrom))
-      ? newDateFrom
-      : this._state.dateTo;
-    this.updateElement({
-      ...this._state,
-      dateFrom: newDateFrom,
-      dateTo: updatedDateTo,
-    });
+    const isDateToInvalid = dayjs(this._state.dateTo).isBefore(dayjs(newDateFrom));
+    this._state.dateFrom = newDateFrom;
+    if (isDateToInvalid) {
+      this._state.dateTo = newDateFrom;
+      if (this.#datepickerTo) {
+        this.#datepickerTo.setDate(newDateFrom);
+      }
+    }
+    if (this.#datepickerTo) {
+      this.#datepickerTo.set('minDate', newDateFrom);
+    }
   };
 
   #handleDateToChange = ([userDate]) => {
     const newDateTo = userDate.toISOString();
-    const correctedDateTo = dayjs(newDateTo).isBefore(dayjs(this._state.dateFrom))
-      ? this._state.dateFrom
-      : newDateTo;
-    this.updateElement({
-      ...this._state,
-      dateTo: correctedDateTo,
-    });
+    const isBeforeFrom = dayjs(newDateTo).isBefore(dayjs(this._state.dateFrom));
+    this._state.dateTo = isBeforeFrom ? this._state.dateFrom : newDateTo;
+    if (this.#datepickerFrom) {
+      this.#datepickerFrom.set('maxDate', this._state.dateTo);
+    }
   };
 
   #handleFormSubmit = (evt) => {
