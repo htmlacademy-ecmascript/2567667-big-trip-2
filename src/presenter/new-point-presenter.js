@@ -9,11 +9,13 @@ export default class NewPointPresenter {
   #pointEditComponent = null;
   #destinations = [];
   #offers = [];
+  #setActiveEditForm = null;
 
-  constructor({ contentList, onDataChange, onDestroy }) {
+  constructor({ contentList, onDataChange, onDestroy, setActiveEditForm }) {
     this.#contentList = contentList;
     this.#handleDataChange = onDataChange;
     this.#handleDestroy = onDestroy;
+    this.#setActiveEditForm = setActiveEditForm;
   }
 
   init(destinations, offers) {
@@ -37,7 +39,7 @@ export default class NewPointPresenter {
     requestAnimationFrame(() => {
       this.#pointEditComponent.restoreHandlers();
     });
-
+    this.#setActiveEditForm?.(this.#pointEditComponent);
     document.addEventListener('keydown', this.#escKeyDownHandler);
   }
 
@@ -49,10 +51,10 @@ export default class NewPointPresenter {
     if (this.#pointEditComponent === null) {
       return;
     }
-
     remove(this.#pointEditComponent);
     this.#pointEditComponent = null;
     document.removeEventListener('keydown', this.#escKeyDownHandler);
+    this.#setActiveEditForm?.(null);
     this.#handleDestroy?.();
   }
 

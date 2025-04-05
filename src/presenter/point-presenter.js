@@ -9,14 +9,14 @@ export default class PointPresenter {
   #offers = null;
   #destinations = null;
   #onDataChange = null;
-  #onResetView = null;
   #pointComponent = null;
   #pointEditComponent = null;
+  #setActiveEditForm = null;
 
-  constructor({ contentList, onDataChange, onResetView }) {
+  constructor({ contentList, onDataChange, setActiveEditForm }) {
     this.#contentList = contentList;
     this.#onDataChange = onDataChange;
-    this.#onResetView = onResetView;
+    this.#setActiveEditForm = setActiveEditForm;
   }
 
   init(point, destinations, offers) {
@@ -57,13 +57,13 @@ export default class PointPresenter {
       return;
     }
 
-    this.#onResetView();
     replace(this.#pointEditComponent, this.#pointComponent);
 
     requestAnimationFrame(() => {
       this.#pointEditComponent.restoreHandlers();
     });
 
+    this.#setActiveEditForm?.(this);
     document.addEventListener('keydown', this.#escKeyDownHandler);
   };
 
@@ -76,6 +76,7 @@ export default class PointPresenter {
       return;
     }
 
+    this.#pointEditComponent.reset(this.#point);
     replace(this.#pointComponent, this.#pointEditComponent);
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   };
@@ -114,9 +115,17 @@ export default class PointPresenter {
   };
 
   resetView() {
-    if (this.#pointEditComponent && this.#contentList.element.contains(this.#pointEditComponent.element)) {
+    if (
+      this.#pointEditComponent &&
+      this.#contentList.element.contains(this.#pointEditComponent.element)
+    ) {
+      this.#pointEditComponent.reset(this.#point);
       this.#replaceFormToCard();
     }
+  }
+
+  containsForm(component) {
+    return this.#pointEditComponent === component;
   }
 
   destroy() {

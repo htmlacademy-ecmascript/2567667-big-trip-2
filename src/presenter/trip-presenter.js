@@ -24,6 +24,8 @@ export default class TripPresenter {
   #isLoading = true;
   #tripInfoComponent = null;
   #onNewPointFormClose = null;
+  #activePresenter = null;
+  #noPointsComponent = null;
 
   constructor({ headerContainer, mainContainer, pointsModel, filterModel }) {
     this.#newPointPresenter = new NewPointPresenter({
@@ -150,9 +152,24 @@ export default class TripPresenter {
     const points = this.#pointModel.getPoints();
     const filteredPoints = filterFunctions[filterType](points);
     const sortedPoints = this.#applySort(filteredPoints);
+    if (this.#noPointsComponent) {
+      remove(this.#noPointsComponent);
+      this.#noPointsComponent = null;
+    }
 
     if (!sortedPoints.length) {
-      render(new NoPointsView(filterType), this.#contentList.element, RenderPosition.BEFOREEND);
+      if (this.#tripInfoComponent) {
+        remove(this.#tripInfoComponent);
+        this.#tripInfoComponent = null;
+      }
+
+      if (this.#sortComponent) {
+        remove(this.#sortComponent);
+        this.#sortComponent = null;
+      }
+
+      this.#noPointsComponent = new NoPointsView(filterType);
+      render(this.#noPointsComponent, this.#mainContainer, RenderPosition.BEFOREEND);
       return;
     }
 
@@ -163,7 +180,8 @@ export default class TripPresenter {
     const pointPresenter = new PointPresenter({
       contentList: this.#contentList,
       onDataChange: this.#handleUserAction,
-      onResetView: this.#resetAllPointsView
+      onResetView: this.#resetAllPointsView,
+      setActiveEditForm: this.setActiveEditForm.bind(this)
     });
 
     pointPresenter.init(point, this.#pointModel.getDestinations(), this.#pointModel.getOffers());
@@ -177,6 +195,10 @@ export default class TripPresenter {
     if (resetSortType) {
       this.#currentSort = SortType.DAY;
     }
+    if (this.#noPointsComponent) {
+      remove(this.#noPointsComponent);
+      this.#noPointsComponent = null;
+    }
   }
 
   createPoint() {
@@ -186,16 +208,33 @@ export default class TripPresenter {
     this.#resetAllPointsView();
     this.#filterModel.setFilter(UpdateType.MAJOR, FilterType.EVERYTHING);
     this.#handleModelEvent(UpdateType.MAJOR);
-
+    if (this.#noPointsComponent) {
+      remove(this.#noPointsComponent);
+      this.#noPointsComponent = null;
+    }
     this.#newPointPresenter.init(
       this.#pointModel.getDestinations(),
       this.#pointModel.getOffers()
     );
   }
 
+  setActiveEditForm(presenter) {
+    if (this.#activePresenter && this.#activePresenter !== presenter) {
+      this.#activePresenter.resetView();
+    }
+
+    this.#activePresenter = presenter;
+  }
+
   #handleNewPointFormClose = () => {
     this.#newPointPresenter.destroy();
     this.#onNewPointFormClose?.();
+    const points = this.#pointModel.getPoints();
+    const filteredPoints = filterFunctions[this.#filterModel.getFilter()](points);
+    if (filteredPoints.length === 0 && !this.#noPointsComponent) {
+      this.#noPointsComponent = new NoPointsView(this.#filterModel.getFilter());
+      render(this.#noPointsComponent, this.#mainContainer, RenderPosition.BEFOREEND);
+    }
   };
 
   #resetAllPointsView = () => {

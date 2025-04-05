@@ -22,24 +22,26 @@ function createEventTypeListTemplate(type, id) {
 }
 
 function createOffersTemplate(availableOffers, selectedOfferIds) {
-  return availableOffers.length > 0
-    ? availableOffers.map((offer) => `
+  return availableOffers.map((offer) => {
+    const isChecked = selectedOfferIds.includes(String(offer.id));
+    return `
       <div class="event__offer-selector">
         <input
           class="event__offer-checkbox visually-hidden"
           id="event-offer-${offer.id}"
           type="checkbox"
           name="event-offer"
-          ${selectedOfferIds.includes(offer.id) ? 'checked' : ''}
+          data-offer-id="${offer.id}"
+          ${isChecked ? 'checked' : ''}
         >
         <label class="event__offer-label" for="event-offer-${offer.id}">
-          <span class="event__offer-title">${he.encode(offer.title)}</span>
+          <span class="event__offer-title">${offer.title}</span>
           &plus;&euro;&nbsp;
           <span class="event__offer-price">${offer.price}</span>
         </label>
       </div>
-    `).join('')
-    : '<p class="event__no-offers">No available offers</p>';
+    `;
+  }).join('');
 }
 
 function createEditEventFormTemplate(state, destinations) {
@@ -202,7 +204,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     this._setState({
       ...EditEventFormView.parsePointToState(basePoint),
       availableOffers: allOffersByType,
-      selectedOfferIds: basePoint.offers
+      selectedOfferIds: basePoint.offers.map(String)
     });
   }
 
@@ -247,7 +249,7 @@ export default class EditEventFormView extends AbstractStatefulView {
   #initDatepicker(element, defaultDate, minDate, onChange) {
     return flatpickr(element, {
       enableTime: true,
-      dateFormat: 'd/m/Y h:i K',
+      dateFormat: 'd/m/y H:i',
       defaultDate,
       ...(minDate && { minDate }),
       onChange,
@@ -360,10 +362,10 @@ export default class EditEventFormView extends AbstractStatefulView {
 
   #handleOfferChange = () => {
     const checkedOfferIds = Array.from(
-      this.element.querySelectorAll('input[name="event-offer"]:checked')
-    ).map((input) => input.id.replace('event-offer-', ''));
+      this.element.querySelectorAll('.event__offer-checkbox:checked')
+    ).map((input) => input.dataset.offerId);
 
-    this._setState({
+    this.updateElement({
       ...this._state,
       selectedOfferIds: checkedOfferIds
     });
@@ -400,6 +402,15 @@ export default class EditEventFormView extends AbstractStatefulView {
     super.removeElement();
     this.#datepickerFrom = this.#destroyDatepicker(this.#datepickerFrom);
     this.#datepickerTo = this.#destroyDatepicker(this.#datepickerTo);
+  }
+
+  reset(point) {
+    const allOffersByType = this.#offers.find((o) => o.type === point.type)?.offers || [];
+    this.updateElement({
+      ...EditEventFormView.parsePointToState(point),
+      availableOffers: allOffersByType,
+      selectedOfferIds: point.offers.map(String)
+    });
   }
 
   restoreHandlers() {
