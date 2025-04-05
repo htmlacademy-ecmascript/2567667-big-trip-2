@@ -2,8 +2,6 @@ import { render, remove, RenderPosition } from '../framework/render.js';
 import EditEventFormView from '../view/edit-event-form-view.js';
 import { UserAction, UpdateType } from '../const.js';
 
-const { AFTERBEGIN } = RenderPosition;
-
 export default class NewPointPresenter {
   #contentList = null;
   #handleDataChange = null;
@@ -34,7 +32,12 @@ export default class NewPointPresenter {
       isNew: true
     });
 
-    render(this.#pointEditComponent, this.#contentList.element, AFTERBEGIN);
+    render(this.#pointEditComponent, this.#contentList.element, RenderPosition.AFTERBEGIN);
+
+    requestAnimationFrame(() => {
+      this.#pointEditComponent.restoreHandlers();
+    });
+
     document.addEventListener('keydown', this.#escKeyDownHandler);
   }
 

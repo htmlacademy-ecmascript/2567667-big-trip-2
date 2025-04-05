@@ -23,6 +23,7 @@ export default class PointPresenter {
     this.#point = point;
     this.#destinations = destinations;
     this.#offers = offers;
+
     const allOffersByType = this.#offers.find((offer) => offer.type === this.#point.type)?.offers || [];
     const selectedOffers = allOffersByType.filter((offer) =>
       this.#point.offers.includes(offer.id)
@@ -48,12 +49,33 @@ export default class PointPresenter {
   }
 
   #replaceCardToForm = () => {
+    if (
+      !this.#pointComponent ||
+      !this.#pointComponent.element ||
+      !this.#pointComponent.element.parentElement
+    ) {
+      return;
+    }
+
     this.#onResetView();
     replace(this.#pointEditComponent, this.#pointComponent);
+
+    requestAnimationFrame(() => {
+      this.#pointEditComponent.restoreHandlers();
+    });
+
     document.addEventListener('keydown', this.#escKeyDownHandler);
   };
 
   #replaceFormToCard = () => {
+    if (
+      !this.#pointEditComponent ||
+      !this.#pointEditComponent.element ||
+      !this.#pointEditComponent.element.parentElement
+    ) {
+      return;
+    }
+
     replace(this.#pointComponent, this.#pointEditComponent);
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   };
@@ -70,16 +92,17 @@ export default class PointPresenter {
       this.#pointEditComponent.setDeleting();
       try {
         await this.#onDataChange(UserAction.DELETE_POINT, UpdateType.MINOR, updatedPoint);
-        setTimeout(() => this.#replaceFormToCard(), 1000);
+        this.#replaceFormToCard();
       } catch {
         this.#pointEditComponent.setAborting();
       }
       return;
     }
+
     this.#pointEditComponent.setSaving();
     try {
       await this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
-      setTimeout(() => this.#replaceFormToCard(), 1000);
+      this.#replaceFormToCard();
     } catch {
       this.#pointEditComponent.setAborting();
     }

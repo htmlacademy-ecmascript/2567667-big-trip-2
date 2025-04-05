@@ -200,5 +200,6 @@ export default class TripPresenter {
 
   #resetAllPointsView = () => {
     this.#pointPresenters.forEach((presenter) => presenter.resetView());
+    this.#newPointPresenter.destroy();
   };
 }

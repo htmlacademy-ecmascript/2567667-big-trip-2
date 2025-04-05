@@ -7,7 +7,7 @@ import NewPointButtonView from './view/new-point-button-view.js';
 import { render } from './framework/render.js';
 
 const AUTHORIZATION = `Basic ${Math.random().toString(36).substring(2, 12)}`;
-const ENDPOINT = 'https://22.objects.htmlacademy.pro/big-trip';
+const ENDPOINT = 'https://23.objects.htmlacademy.pro/big-trip';
 
 const apiService = new TripApiService(ENDPOINT, AUTHORIZATION);
 const pointsModel = new PointsModel(apiService);

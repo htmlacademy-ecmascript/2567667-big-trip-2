@@ -43,10 +43,31 @@ function createOffersTemplate(availableOffers, selectedOfferIds) {
 }
 
 function createEditEventFormTemplate(state, destinations) {
-  const { id, dateFrom, dateTo, destination, type, basePrice, availableOffers, selectedOfferIds, isSaving, isDeleting, isDisabled } = state;
+  const {
+    id,
+    dateFrom,
+    dateTo,
+    destination,
+    type,
+    basePrice,
+    availableOffers,
+    selectedOfferIds,
+    isSaving,
+    isDeleting,
+    isDisabled
+  } = state;
+
   const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
   const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
-  const destinationData = destinations.find((dest) => dest.id === destination) || { name: '', description: '', pictures: [] };
+  const destinationData = destinations.find((dest) => dest.id === destination) || {
+    name: '',
+    description: '',
+    pictures: []
+  };
+
+  const hasDescription = Boolean(destinationData.description?.trim());
+  const hasPictures = destinationData.pictures.length > 0;
+  const shouldShowDestinationSection = hasDescription || hasPictures;
 
   return `
     <li class="trip-events__item">
@@ -63,45 +84,88 @@ function createEditEventFormTemplate(state, destinations) {
 
           <div class="event__field-group event__field-group--destination">
             <label class="event__label event__type-output" for="event-destination-${id}">${type}</label>
-            <input class="event__input event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${he.encode(destinationData.name)}" list="destination-list-${id}">
+            <input
+              class="event__input event__input--destination"
+              id="event-destination-${id}"
+              type="text"
+              name="event-destination"
+              value="${he.encode(destinationData.name)}"
+              list="destination-list-${id}">
             <datalist id="destination-list-${id}">
               ${destinations.map((dest) => `<option value="${he.encode(dest.name)}"></option>`).join('')}
             </datalist>
           </div>
 
           <div class="event__field-group event__field-group--time">
-            <input class="event__input event__input--time" type="text" name="event-start-time" value="${formattedDateFrom}">
+            <input
+              id="event-start-time-${id}"
+              class="event__input event__input--time"
+              type="text"
+              name="event-start-time"
+              value="${formattedDateFrom}">
             &mdash;
-            <input class="event__input event__input--time" type="text" name="event-end-time" value="${formattedDateTo}">
+            <input
+              id="event-end-time-${id}"
+              class="event__input event__input--time"
+              type="text"
+              name="event-end-time"
+              value="${formattedDateTo}">
           </div>
 
           <div class="event__field-group event__field-group--price">
             <label class="event__label">&euro;</label>
-            <input class="event__input event__input--price" type="number" name="event-price" value="${basePrice}" min="0" step="1" required>
+            <input
+              class="event__input event__input--price"
+              type="number"
+              name="event-price"
+              value="${basePrice}"
+              min="0"
+              step="1"
+              required>
           </div>
 
-          <button class="event__save-btn btn btn--blue" type="submit" ${isDisabled ? 'disabled' : ''}>${isSaving ? 'Saving...' : 'Save'}</button>
-          <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>${isDeleting ? 'Deleting...' : 'Delete'}</button>
+          <button class="event__save-btn btn btn--blue" type="submit" ${isDisabled ? 'disabled' : ''}>
+            ${isSaving ? 'Saving...' : 'Save'}
+          </button>
+          <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>
+            ${isDeleting ? 'Deleting...' : 'Delete'}
+          </button>
           <button class="event__rollup-btn" type="button">
             <span class="visually-hidden">Open event</span>
           </button>
         </header>
 
         <section class="event__details">
-          <section class="event__section event__section--offers">
-            <h3 class="event__section-title event__section-title--offers">Offers</h3>
-            <div class="event__available-offers">${createOffersTemplate(availableOffers, selectedOfferIds)}</div>
-          </section>
+          ${availableOffers.length > 0
+    ? `<section class="event__section event__section--offers">
+                <h3 class="event__section-title event__section-title--offers">Offers</h3>
+                <div class="event__available-offers">
+                  ${createOffersTemplate(availableOffers, selectedOfferIds)}
+                </div>
+              </section>`
+    : ''
+}
 
-          <section class="event__section event__section--destination">
-            <h3 class="event__section-title event__section-title--destination">Destination</h3>
-            <p class="event__destination-description">${he.encode(destinationData.description)}</p>
-            <div class="event__photos-container">
-              <div class="event__photos-tape">
-                ${destinationData.pictures.map((pic) => `<img class="event__photo" src="${pic.src}" alt="Event photo">`).join('')}
-              </div>
-            </div>
-          </section>
+          ${shouldShowDestinationSection
+    ? `<section class="event__section event__section--destination">
+                <h3 class="event__section-title event__section-title--destination">Destination</h3>
+                ${hasDescription
+    ? `<p class="event__destination-description">${he.encode(destinationData.description)}</p>`
+    : ''
+}
+                ${hasPictures
+    ? `<div class="event__photos-container">
+                      <div class="event__photos-tape">
+                        ${destinationData.pictures.map((pic) =>
+    `<img class="event__photo" src="${pic.src}" alt="Event photo">`
+  ).join('')}
+                      </div>
+                    </div>`
+    : ''
+}
+              </section>`
+    : ''
+}
         </section>
       </form>
     </li>
@@ -140,8 +204,6 @@ export default class EditEventFormView extends AbstractStatefulView {
       availableOffers: allOffersByType,
       selectedOfferIds: basePoint.offers
     });
-
-    this._restoreHandlers();
   }
 
   get template() {
@@ -169,13 +231,16 @@ export default class EditEventFormView extends AbstractStatefulView {
   }
 
   _restoreHandlers() {
-    this.element.querySelector('form').addEventListener('submit', this.#handleFormSubmit);
-    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#handleEditClose);
-    this.element.querySelector('.event__type-group').addEventListener('change', this.#handleTypeChange);
-    this.element.querySelector('.event__input--destination').addEventListener('change', this.#handleDestinationChange);
-    this.element.querySelector('.event__input--price').addEventListener('change', this.#handlePriceChange);
-    this.element.querySelector('.event__available-offers').addEventListener('change', this.#handleOfferChange);
-    this.element.querySelector('.event__reset-btn').addEventListener('click', this.#handleDeleteClick);
+    if (!this.element) {
+      return;
+    }
+    this.element.querySelector('form')?.addEventListener('submit', this.#handleFormSubmit);
+    this.element.querySelector('.event__rollup-btn')?.addEventListener('click', this.#handleEditClose);
+    this.element.querySelector('.event__type-group')?.addEventListener('change', this.#handleTypeChange);
+    this.element.querySelector('.event__input--destination')?.addEventListener('change', this.#handleDestinationChange);
+    this.element.querySelector('.event__input--price')?.addEventListener('change', this.#handlePriceChange);
+    this.element.querySelector('.event__available-offers')?.addEventListener('change', this.#handleOfferChange);
+    this.element.querySelector('.event__reset-btn')?.addEventListener('click', this.#handleDeleteClick);
     this.#setDatepickers();
   }
 
@@ -335,5 +400,9 @@ export default class EditEventFormView extends AbstractStatefulView {
     super.removeElement();
     this.#datepickerFrom = this.#destroyDatepicker(this.#datepickerFrom);
     this.#datepickerTo = this.#destroyDatepicker(this.#datepickerTo);
+  }
+
+  restoreHandlers() {
+    this._restoreHandlers();
   }
 }
