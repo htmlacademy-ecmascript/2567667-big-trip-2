@@ -52,15 +52,19 @@ export default class PointPresenter {
 
   #replaceCardToForm = () => {
     if (
-      !this.#pointComponent ||
-      !this.#pointComponent.element ||
-      !this.#pointComponent.element.parentElement
+      !this.#pointComponent?.element?.parentElement ||
+      !this.#pointEditComponent
     ) {
       return;
     }
 
     this.#onResetView?.();
-    replace(this.#pointEditComponent, this.#pointComponent);
+
+    try {
+      replace(this.#pointEditComponent, this.#pointComponent);
+    } catch {
+      return;
+    }
 
     requestAnimationFrame(() => {
       this.#pointEditComponent.restoreHandlers();
@@ -72,15 +76,20 @@ export default class PointPresenter {
 
   #replaceFormToCard = () => {
     if (
-      !this.#pointEditComponent ||
-      !this.#pointEditComponent.element ||
-      !this.#pointEditComponent.element.parentElement
+      !this.#pointEditComponent?.element?.parentElement ||
+      !this.#pointComponent
     ) {
       return;
     }
 
     this.#pointEditComponent.reset(this.#point);
-    replace(this.#pointComponent, this.#pointEditComponent);
+
+    try {
+      replace(this.#pointComponent, this.#pointEditComponent);
+    } catch {
+      return;
+    }
+
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   };
 
@@ -93,22 +102,29 @@ export default class PointPresenter {
 
   #handleFormSubmit = async (updatedPoint) => {
     if (updatedPoint.__delete) {
-      this.#pointEditComponent.setDeleting();
+      this.#pointEditComponent?.setDeleting();
       try {
         await this.#onDataChange(UserAction.DELETE_POINT, UpdateType.MINOR, updatedPoint);
         this.#replaceFormToCard();
       } catch {
-        this.#pointEditComponent.setAborting();
+        if (this.#pointEditComponent) {
+          this.#pointEditComponent.setAborting();
+        }
+        setTimeout(() => {
+          this.destroy();
+        }, 1000);
       }
       return;
     }
 
-    this.#pointEditComponent.setSaving();
+    this.#pointEditComponent?.setSaving();
     try {
       await this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
       this.#replaceFormToCard();
     } catch {
-      this.#pointEditComponent.setAborting();
+      if (this.#pointEditComponent) {
+        this.#pointEditComponent.setAborting();
+      }
     }
   };
 

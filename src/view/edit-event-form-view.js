@@ -22,18 +22,21 @@ function createEventTypeListTemplate(type, id) {
 }
 
 function createOffersTemplate(availableOffers, selectedOfferIds) {
-  return availableOffers.map((offer) => {
+  return availableOffers.map((offer, index) => {
     const isChecked = selectedOfferIds.includes(String(offer.id));
+    const selectorClass = index === 0 ? 'event__offer-selector' : 'event__offer-selector';
     return `
-      <div class="event__offer-selector">
+      <div class="${selectorClass}">
         <input
           class="event__offer-checkbox visually-hidden"
           id="event-offer-${offer.id}"
           type="checkbox"
           name="event-offer"
+          value="${offer.id}"
           data-offer-id="${offer.id}"
+          data-cy="offer-checkbox-${offer.id}"
           ${isChecked ? 'checked' : ''}
-        >
+        />
         <label class="event__offer-label" for="event-offer-${offer.id}">
           <span class="event__offer-title">${offer.title}</span>
           &plus;&euro;&nbsp;
@@ -44,15 +47,18 @@ function createOffersTemplate(availableOffers, selectedOfferIds) {
   }).join('');
 }
 
-function createButtonTemplate(isCreating, isDeleting, isDisabled) {
+function createButtonTemplate(isCreating, isDeleting) {
+  const resetButtonDisabled = isDeleting;
   if (isCreating) {
     return `
-      <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>Cancel</button>
+      <button class="event__reset-btn" type="reset" ${resetButtonDisabled ? 'disabled' : ''}>Cancel</button>
     `;
   }
   return `
-    <button class="event__reset-btn" type="reset" ${isDisabled ? 'disabled' : ''}>${isDeleting ? 'Deleting...' : 'Delete'}</button>
-    <button class="event__rollup-btn" type="button" ${isDisabled ? 'disabled' : ''}>
+    <button class="event__reset-btn" type="reset" ${resetButtonDisabled ? 'disabled' : ''}>
+      ${isDeleting ? 'Deleting...' : 'Delete'}
+    </button>
+    <button class="event__rollup-btn" type="button">
       <span class="visually-hidden">Open event</span>
     </button>
   `;
@@ -371,12 +377,10 @@ export default class EditEventFormView extends AbstractStatefulView {
 
   setAborting() {
     this.updateElement({
-      ...this._state,
       isDisabled: false,
       isSaving: false,
       isDeleting: false,
     });
-
     this.shake();
   }
 

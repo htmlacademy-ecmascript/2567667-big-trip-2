@@ -67,13 +67,13 @@ export default class NewPointPresenter {
   }
 
   #handleFormSubmit = async (point) => {
-    this.#pointEditComponent.setSaving();
+    this.#pointEditComponent?.setSaving();
 
     try {
       await this.#handleDataChange(UserAction.ADD_POINT, UpdateType.MAJOR, point);
       this.destroy();
     } catch {
-      this.#pointEditComponent.setAborting();
+      this.#pointEditComponent?.setAborting();
     }
   };
 

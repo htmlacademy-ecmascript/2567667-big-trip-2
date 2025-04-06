@@ -9,6 +9,7 @@ import { sortFunctions } from '../utils/sort.js';
 import PointPresenter from './point-presenter.js';
 import NewPointPresenter from './new-point-presenter.js';
 import LoadingView from '../view/loading-view.js';
+import FailedLoadingView from '../view/failed-load-data-view.js';
 
 export default class TripPresenter {
   #newPointPresenter = null;
@@ -26,6 +27,7 @@ export default class TripPresenter {
   #onNewPointFormClose = null;
   #activePresenter = null;
   #noPointsComponent = null;
+  #failedLoadingComponent = null;
 
   constructor({ headerContainer, mainContainer, pointsModel, filterModel }) {
     this.#newPointPresenter = new NewPointPresenter({
@@ -78,22 +80,30 @@ export default class TripPresenter {
       case UpdateType.INIT:
         this.#isLoading = false;
         remove(this.#loadingComponent);
+
+        if (this.#pointModel.hasError()) {
+          this.#renderFailedLoading();
+          return;
+        }
+
         this.#renderBoard();
         break;
     }
   };
 
-  #handleUserAction = (actionType, updateType, update) => {
+  #renderFailedLoading() {
+    this.#failedLoadingComponent = new FailedLoadingView();
+    render(this.#failedLoadingComponent, this.#mainContainer, RenderPosition.BEFOREEND);
+  }
+
+  #handleUserAction = async (actionType, updateType, update) => {
     switch (actionType) {
       case UserAction.UPDATE_POINT:
-        this.#pointModel.updatePoint(updateType, update);
-        break;
+        return this.#pointModel.updatePoint(updateType, update);
       case UserAction.ADD_POINT:
-        this.#pointModel.addPoint(updateType, update);
-        break;
+        return this.#pointModel.addPoint(updateType, update);
       case UserAction.DELETE_POINT:
-        this.#pointModel.deletePoint(updateType, update);
-        break;
+        return this.#pointModel.deletePoint(updateType, update);
     }
   };
 
