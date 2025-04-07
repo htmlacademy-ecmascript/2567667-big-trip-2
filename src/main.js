@@ -3,6 +3,7 @@ import PointsModel from './model/points-model.js';
 import FilterModel from './model/filter-model.js';
 import TripPresenter from './presenter/trip-presenter.js';
 import FilterPresenter from './presenter/filter-presenter.js';
+import TripInfoPresenter from './presenter/trip-info-presenter.js';
 import NewPointButtonView from './view/new-point-button-view.js';
 import { render } from './framework/render.js';
 
@@ -34,6 +35,11 @@ const filterPresenter = new FilterPresenter({
   pointsModel
 });
 
+const tripInfoPresenter = new TripInfoPresenter({
+  container: headerElement,
+  pointsModel
+});
+
 function handleNewPointButtonClick() {
   tripPresenter.createPoint();
   newPointButtonComponent.element.disabled = true;
@@ -46,6 +52,7 @@ function handleNewPointFormClose() {
 tripPresenter.setNewPointFormCloseHandler(handleNewPointFormClose);
 
 tripPresenter.init();
+tripInfoPresenter.init();
 filterPresenter.init();
 
 render(newPointButtonComponent, headerElement);
