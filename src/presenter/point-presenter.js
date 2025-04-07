@@ -105,15 +105,11 @@ export default class PointPresenter {
       this.#pointEditComponent?.setDeleting();
       try {
         await this.#onDataChange(UserAction.DELETE_POINT, UpdateType.MINOR, updatedPoint);
-        this.#replaceFormToCard();
+        this.destroy();
       } catch {
-        if (this.#pointEditComponent) {
-          this.#pointEditComponent.setAborting();
-        }
-        setTimeout(() => {
-          this.destroy();
-        }, 1000);
+        this.#pointEditComponent?.setAborting();
       }
+
       return;
     }
 
@@ -122,9 +118,7 @@ export default class PointPresenter {
       await this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
       this.#replaceFormToCard();
     } catch {
-      if (this.#pointEditComponent) {
-        this.#pointEditComponent.setAborting();
-      }
+      this.#pointEditComponent?.setAborting();
     }
   };
 

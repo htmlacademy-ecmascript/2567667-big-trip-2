@@ -126,7 +126,17 @@ function createEditEventFormTemplate(state, destinations, isCreating = false) {
 
           <div class="event__field-group event__field-group--price">
             <label class="event__label">&euro;</label>
-            <input class="event__input event__input--price" type="number" name="event-price" value="${basePrice}" min="0" step="1" required>
+            <input
+              class="event__input event__input--price"
+              type="number"
+              name="event-price"
+              value="${basePrice}"
+              min="1"
+              max="100000"
+              step="1"
+              required
+              title="Цена должна быть от 1 до 100000"
+            >
           </div>
 
           <button class="event__save-btn btn btn--blue" type="submit" ${isDisabled ? 'disabled' : ''}>
@@ -216,6 +226,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     delete point.isDisabled;
     delete point.isSaving;
     delete point.isDeleting;
+    delete point.isCreating;
     return point;
   }
 
@@ -228,7 +239,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     this.element.querySelector('.event__type-group')?.addEventListener('change', this.#handleTypeChange);
     this.element.querySelector('.event__input--destination')?.addEventListener('change', this.#handleDestinationChange);
     this.element.querySelector('.event__input--price')?.addEventListener('change', this.#handlePriceChange);
-    this.element.querySelector('.event__available-offers')?.addEventListener('change', this.#handleOfferChange);
+    this.element.querySelector('.event__available-offers')?.addEventListener('click', this.#handleOfferClick);
     this.element.querySelector('.event__reset-btn')?.addEventListener('click', this.#handleDeleteClick);
     this.#setDatepickers();
   }
@@ -340,11 +351,13 @@ export default class EditEventFormView extends AbstractStatefulView {
 
   #handlePriceChange = (evt) => {
     const value = Number(evt.target.value);
-    if (!isNaN(value)) {
+    if (!isNaN(value) && value >= 0 && Number.isInteger(value)) {
       this.updateElement({
         ...this._state,
         basePrice: value
       });
+    } else {
+      evt.target.value = this._state.basePrice;
     }
   };
 
@@ -357,6 +370,22 @@ export default class EditEventFormView extends AbstractStatefulView {
       ...this._state,
       selectedOfferIds: checkedOfferIds
     });
+  };
+
+  #handleOfferClick = (evt) => {
+    const label = evt.target.closest('.event__offer-label');
+    if (!label) {
+      return;
+    }
+
+    const inputId = label.getAttribute('for');
+    const input = this.element.querySelector(`#${inputId}`);
+    if (!input) {
+      return;
+    }
+
+    input.checked = !input.checked;
+    this.#handleOfferChange();
   };
 
   setSaving() {
