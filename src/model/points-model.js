@@ -1,5 +1,6 @@
 import Observable from '../framework/observable.js';
 import { UpdateType } from '../const.js';
+import { ErrorCodes } from '../const.js';
 
 export default class PointModel extends Observable {
   #points = [];
@@ -71,7 +72,7 @@ export default class PointModel extends Observable {
       this._notify(updateType, updatedPoint);
 
     } catch (err) {
-      throw new Error('Can\'t update point');
+      throw new Error(ErrorCodes.UPDATE_POINT_FAILED);
     }
   }
 
@@ -82,7 +83,7 @@ export default class PointModel extends Observable {
       this.#points = [addedPoint, ...this.#points];
       this._notify(updateType, addedPoint);
     } catch (err) {
-      throw new Error('Can\'t add point');
+      throw new Error(ErrorCodes.ADD_POINT_FAILED);
     }
   }
 
@@ -100,7 +101,7 @@ export default class PointModel extends Observable {
       ];
       this._notify(updateType, pointToDelete);
     } catch (err) {
-      throw new Error('Can\'t delete point');
+      throw new Error(ErrorCodes.DELETE_POINT_FAILED);
     }
   }
 

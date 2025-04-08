@@ -96,9 +96,13 @@ export default class PointPresenter {
   #escKeyDownHandler = (evt) => {
     if (evt.key === 'Escape') {
       evt.preventDefault();
+      if (this.#pointEditComponent?._state?.isSaving || this.#pointEditComponent?._state?.isDeleting) {
+        return;
+      }
       this.#replaceFormToCard();
     }
   };
+
 
   #handleFormSubmit = async (updatedPoint) => {
     if (updatedPoint.__delete) {
@@ -106,8 +110,10 @@ export default class PointPresenter {
       try {
         await this.#onDataChange(UserAction.DELETE_POINT, UpdateType.MINOR, updatedPoint);
         this.destroy();
-      } catch {
-        this.#pointEditComponent?.setAborting();
+      } catch (err) {
+        if (err.message === 'DELETE_POINT_FAILED') {
+          this.#pointEditComponent?.setAborting();
+        }
       }
 
       return;
@@ -117,14 +123,22 @@ export default class PointPresenter {
     try {
       await this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
       this.#replaceFormToCard();
-    } catch {
-      this.#pointEditComponent?.setAborting();
+    } catch (err) {
+      if (err.message === 'UPDATE_POINT_FAILED') {
+        this.#pointEditComponent?.setAborting();
+      }
     }
   };
 
-  #handleFavoriteClick = () => {
+  #handleFavoriteClick = async () => {
     const updatedPoint = { ...this.#point, isFavorite: !this.#point.isFavorite };
-    this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
+    try {
+      await this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
+    } catch (err) {
+      if (err.message === 'UPDATE_POINT_FAILED') {
+        this.#pointComponent?.shake?.();
+      }
+    }
   };
 
   resetView() {

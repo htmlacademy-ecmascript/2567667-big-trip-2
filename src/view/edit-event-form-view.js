@@ -240,7 +240,12 @@ export default class EditEventFormView extends AbstractStatefulView {
     this.element.querySelector('.event__input--destination')?.addEventListener('change', this.#handleDestinationChange);
     this.element.querySelector('.event__input--price')?.addEventListener('change', this.#handlePriceChange);
     this.element.querySelector('.event__available-offers')?.addEventListener('click', this.#handleOfferClick);
-    this.element.querySelector('.event__reset-btn')?.addEventListener('click', this.#handleDeleteClick);
+    const resetBtn = this.element.querySelector('.event__reset-btn');
+    if (this._state.isCreating) {
+      resetBtn?.addEventListener('click', this.#handleEditClose);
+    } else {
+      resetBtn?.addEventListener('click', this.#handleDeleteClick);
+    }
     this.#setDatepickers();
   }
 
@@ -319,9 +324,10 @@ export default class EditEventFormView extends AbstractStatefulView {
 
   #handleEditClose = (evt) => {
     evt.preventDefault();
-    if (this.#onEditClose) {
-      this.#onEditClose();
+    if (this._state.isDeleting || this._state.isSaving) {
+      return;
     }
+    this.#onEditClose();
   };
 
   #handleTypeChange = (evt) => {

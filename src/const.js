@@ -35,3 +35,9 @@ export const BLANK_POINT = {
   offers: [],
   type: 'flight'
 };
+
+export const ErrorCodes = {
+  ADD_POINT_FAILED: 'ADD_POINT_FAILED',
+  UPDATE_POINT_FAILED: 'UPDATE_POINT_FAILED',
+  DELETE_POINT_FAILED: 'DELETE_POINT_FAILED',
+};
