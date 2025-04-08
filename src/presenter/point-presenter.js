@@ -9,13 +9,15 @@ export default class PointPresenter {
   #offers = null;
   #destinations = null;
   #onDataChange = null;
-  #onResetView = null;
   #pointComponent = null;
   #pointEditComponent = null;
+  #setActiveEditForm = null;
+  #onResetView = null;
 
-  constructor({ contentList, onDataChange, onResetView }) {
+  constructor({ contentList, onDataChange, setActiveEditForm, onResetView }) {
     this.#contentList = contentList;
     this.#onDataChange = onDataChange;
+    this.#setActiveEditForm = setActiveEditForm;
     this.#onResetView = onResetView;
   }
 
@@ -23,6 +25,7 @@ export default class PointPresenter {
     this.#point = point;
     this.#destinations = destinations;
     this.#offers = offers;
+
     const allOffersByType = this.#offers.find((offer) => offer.type === this.#point.type)?.offers || [];
     const selectedOffers = allOffersByType.filter((offer) =>
       this.#point.offers.includes(offer.id)
@@ -48,52 +51,108 @@ export default class PointPresenter {
   }
 
   #replaceCardToForm = () => {
-    this.#onResetView();
-    replace(this.#pointEditComponent, this.#pointComponent);
+    if (
+      !this.#pointComponent?.element?.parentElement ||
+      !this.#pointEditComponent
+    ) {
+      return;
+    }
+
+    this.#onResetView?.();
+
+    try {
+      replace(this.#pointEditComponent, this.#pointComponent);
+    } catch {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      this.#pointEditComponent.restoreHandlers();
+    });
+
+    this.#setActiveEditForm?.(this);
     document.addEventListener('keydown', this.#escKeyDownHandler);
   };
 
   #replaceFormToCard = () => {
-    replace(this.#pointComponent, this.#pointEditComponent);
+    if (
+      !this.#pointEditComponent?.element?.parentElement ||
+      !this.#pointComponent
+    ) {
+      return;
+    }
+
+    this.#pointEditComponent.reset(this.#point);
+
+    try {
+      replace(this.#pointComponent, this.#pointEditComponent);
+    } catch {
+      return;
+    }
+
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   };
 
   #escKeyDownHandler = (evt) => {
     if (evt.key === 'Escape') {
       evt.preventDefault();
+      if (this.#pointEditComponent?._state?.isSaving || this.#pointEditComponent?._state?.isDeleting) {
+        return;
+      }
       this.#replaceFormToCard();
     }
   };
+
 
   #handleFormSubmit = async (updatedPoint) => {
     if (updatedPoint.__delete) {
-      this.#pointEditComponent.setDeleting();
+      this.#pointEditComponent?.setDeleting();
       try {
         await this.#onDataChange(UserAction.DELETE_POINT, UpdateType.MINOR, updatedPoint);
-        setTimeout(() => this.#replaceFormToCard(), 1000);
-      } catch {
-        this.#pointEditComponent.setAborting();
+        this.destroy();
+      } catch (err) {
+        if (err.message === 'DELETE_POINT_FAILED') {
+          this.#pointEditComponent?.setAborting();
+        }
       }
+
       return;
     }
-    this.#pointEditComponent.setSaving();
+
+    this.#pointEditComponent?.setSaving();
     try {
       await this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
-      setTimeout(() => this.#replaceFormToCard(), 1000);
-    } catch {
-      this.#pointEditComponent.setAborting();
+      this.#replaceFormToCard();
+    } catch (err) {
+      if (err.message === 'UPDATE_POINT_FAILED') {
+        this.#pointEditComponent?.setAborting();
+      }
     }
   };
 
-  #handleFavoriteClick = () => {
+  #handleFavoriteClick = async () => {
     const updatedPoint = { ...this.#point, isFavorite: !this.#point.isFavorite };
-    this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
+    try {
+      await this.#onDataChange(UserAction.UPDATE_POINT, UpdateType.MINOR, updatedPoint);
+    } catch (err) {
+      if (err.message === 'UPDATE_POINT_FAILED') {
+        this.#pointComponent?.shake?.();
+      }
+    }
   };
 
   resetView() {
-    if (this.#pointEditComponent && this.#contentList.element.contains(this.#pointEditComponent.element)) {
+    if (
+      this.#pointEditComponent &&
+      this.#contentList.element.contains(this.#pointEditComponent.element)
+    ) {
+      this.#pointEditComponent.reset(this.#point);
       this.#replaceFormToCard();
     }
+  }
+
+  containsForm(component) {
+    return this.#pointEditComponent === component;
   }
 
   destroy() {

@@ -6,13 +6,21 @@ dayjs.extend(duration);
 export function calculateDuration(dateFrom, dateTo) {
   const start = dayjs(dateFrom);
   const end = dayjs(dateTo);
-  const diff = dayjs.duration(end.diff(start));
+  const diffInMs = end.diff(start);
+  const durationObj = dayjs.duration(diffInMs);
 
-  if (diff.asDays() >= 1) {
-    return `${diff.days()}D ${diff.hours()}H ${diff.minutes()}M`;
-  } else if (diff.asHours() >= 1) {
-    return `${diff.hours()}H ${diff.minutes()}M`;
+  const totalMinutes = durationObj.asMinutes();
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = Math.floor(totalMinutes % 60);
+
+  const format = (value) => String(value).padStart(2, '0');
+
+  if (days > 0) {
+    return `${format(days)}D ${format(hours)}H ${format(minutes)}M`;
+  } else if (hours > 0) {
+    return `${format(hours)}H ${format(minutes)}M`;
   } else {
-    return `${diff.minutes()}M`;
+    return `${format(minutes)}M`;
   }
 }

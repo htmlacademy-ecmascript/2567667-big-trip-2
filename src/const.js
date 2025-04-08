@@ -25,3 +25,19 @@ export const UserAction = {
   ADD_POINT: 'ADD_POINT',
   DELETE_POINT: 'DELETE_POINT'
 };
+
+export const BLANK_POINT = {
+  basePrice: 0,
+  dateFrom: new Date().toISOString(),
+  dateTo: new Date().toISOString(),
+  destination: null,
+  isFavorite: false,
+  offers: [],
+  type: 'flight'
+};
+
+export const ErrorCodes = {
+  ADD_POINT_FAILED: 'ADD_POINT_FAILED',
+  UPDATE_POINT_FAILED: 'UPDATE_POINT_FAILED',
+  DELETE_POINT_FAILED: 'DELETE_POINT_FAILED',
+};

@@ -1,11 +1,13 @@
 import Observable from '../framework/observable.js';
 import { UpdateType } from '../const.js';
+import { ErrorCodes } from '../const.js';
 
 export default class PointModel extends Observable {
   #points = [];
   #offers = [];
   #destinations = [];
   #api = null;
+  #hasError = false;
 
   constructor(apiService) {
     super();
@@ -24,6 +26,10 @@ export default class PointModel extends Observable {
     return this.#destinations;
   }
 
+  hasError() {
+    return this.#hasError;
+  }
+
   async init() {
     try {
       const [points, offers, destinations] = await Promise.all([
@@ -35,11 +41,13 @@ export default class PointModel extends Observable {
       this.#points = points.map(this.#adaptToClient);
       this.#offers = offers;
       this.#destinations = destinations;
+      this.#hasError = false;
 
     } catch (err) {
       this.#points = [];
       this.#offers = [];
       this.#destinations = [];
+      this.#hasError = true;
     }
 
     this._notify(UpdateType.INIT);
@@ -64,7 +72,7 @@ export default class PointModel extends Observable {
       this._notify(updateType, updatedPoint);
 
     } catch (err) {
-      throw new Error('Can\'t update point');
+      throw new Error(ErrorCodes.UPDATE_POINT_FAILED);
     }
   }
 
@@ -75,7 +83,7 @@ export default class PointModel extends Observable {
       this.#points = [addedPoint, ...this.#points];
       this._notify(updateType, addedPoint);
     } catch (err) {
-      throw new Error('Can\'t add point');
+      throw new Error(ErrorCodes.ADD_POINT_FAILED);
     }
   }
 
@@ -93,7 +101,7 @@ export default class PointModel extends Observable {
       ];
       this._notify(updateType, pointToDelete);
     } catch (err) {
-      throw new Error('Can\'t delete point');
+      throw new Error(ErrorCodes.DELETE_POINT_FAILED);
     }
   }
 
