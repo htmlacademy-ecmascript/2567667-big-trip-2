@@ -2,11 +2,11 @@ import { SortType } from '../const.js';
 import dayjs from 'dayjs';
 
 export const sortFunctions = {
-  [SortType.DAY]: (points) => points.sort((a, b) => dayjs(a.dateFrom).diff(dayjs(b.dateFrom))),
-  [SortType.TIME]: (points) => points.sort((a, b) => {
-    const durationA = dayjs(a.dateTo).diff(dayjs(a.dateFrom));
-    const durationB = dayjs(b.dateTo).diff(dayjs(b.dateFrom));
+  [SortType.DAY]: (tripPoints) => tripPoints.sort((pointA, pointB) => dayjs(pointA.dateFrom).diff(dayjs(pointB.dateFrom))),
+  [SortType.TIME]: (tripPoints) => tripPoints.sort((pointA, pointB) => {
+    const durationA = dayjs(pointA.dateTo).diff(dayjs(pointA.dateFrom));
+    const durationB = dayjs(pointB.dateTo).diff(dayjs(pointB.dateFrom));
     return durationB - durationA;
   }),
-  [SortType.PRICE]: (points) => points.sort((a, b) => b.basePrice - a.basePrice),
+  [SortType.PRICE]: (tripPoints) => tripPoints.sort((pointA, pointB) => pointB.basePrice - pointA.basePrice),
 };

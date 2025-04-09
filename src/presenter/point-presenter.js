@@ -96,9 +96,6 @@ export default class PointPresenter {
   #escKeyDownHandler = (evt) => {
     if (evt.key === 'Escape') {
       evt.preventDefault();
-      if (this.#pointEditComponent?._state?.isSaving || this.#pointEditComponent?._state?.isDeleting) {
-        return;
-      }
       this.#replaceFormToCard();
     }
   };

@@ -234,17 +234,17 @@ export default class EditEventFormView extends AbstractStatefulView {
     if (!this.element) {
       return;
     }
-    this.element.querySelector('form')?.addEventListener('submit', this.#handleFormSubmit);
-    this.element.querySelector('.event__rollup-btn')?.addEventListener('click', this.#handleEditClose);
-    this.element.querySelector('.event__type-group')?.addEventListener('change', this.#handleTypeChange);
-    this.element.querySelector('.event__input--destination')?.addEventListener('change', this.#handleDestinationChange);
-    this.element.querySelector('.event__input--price')?.addEventListener('change', this.#handlePriceChange);
-    this.element.querySelector('.event__available-offers')?.addEventListener('click', this.#handleOfferClick);
+    this.element.querySelector('form')?.addEventListener('submit', this.#formSubmitHandler);
+    this.element.querySelector('.event__rollup-btn')?.addEventListener('click', this.#editCloseButtonClickHandler);
+    this.element.querySelector('.event__type-group')?.addEventListener('change', this.#typeGroupChangeHandler);
+    this.element.querySelector('.event__input--destination')?.addEventListener('change', this.#destinationInputChangeHandler);
+    this.element.querySelector('.event__input--price')?.addEventListener('change', this.#priceInputChangeHandler);
+    this.element.querySelector('.event__available-offers')?.addEventListener('click', this.#offersListClickHandler);
     const resetBtn = this.element.querySelector('.event__reset-btn');
     if (this._state.isCreating) {
-      resetBtn?.addEventListener('click', this.#handleEditClose);
+      resetBtn?.addEventListener('click', this.#editCloseButtonClickHandler);
     } else {
-      resetBtn?.addEventListener('click', this.#handleDeleteClick);
+      resetBtn?.addEventListener('click', this.#deleteButtonClickHandler);
     }
     this.#setDatepickers();
   }
@@ -309,12 +309,12 @@ export default class EditEventFormView extends AbstractStatefulView {
     }
   };
 
-  #handleFormSubmit = (evt) => {
+  #formSubmitHandler = (evt) => {
     evt.preventDefault();
     this.#onFormSubmit(EditEventFormView.parseStateToPoint(this._state));
   };
 
-  #handleDeleteClick = (evt) => {
+  #deleteButtonClickHandler = (evt) => {
     evt.preventDefault();
     this.#onFormSubmit({
       ...EditEventFormView.parseStateToPoint(this._state),
@@ -322,7 +322,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     });
   };
 
-  #handleEditClose = (evt) => {
+  #editCloseButtonClickHandler = (evt) => {
     evt.preventDefault();
     if (this._state.isDeleting || this._state.isSaving) {
       return;
@@ -330,7 +330,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     this.#onEditClose();
   };
 
-  #handleTypeChange = (evt) => {
+  #typeGroupChangeHandler = (evt) => {
     const newType = evt.target.value;
     const newOffers = this.#offers.find((o) => o.type === newType)?.offers || [];
 
@@ -342,7 +342,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     });
   };
 
-  #handleDestinationChange = (evt) => {
+  #destinationInputChangeHandler = (evt) => {
     const inputValue = he.decode(evt.target.value);
     const selectedDest = this.#destinations.find((d) => d.name === inputValue);
     if (selectedDest) {
@@ -355,7 +355,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     }
   };
 
-  #handlePriceChange = (evt) => {
+  #priceInputChangeHandler = (evt) => {
     const value = Number(evt.target.value);
     if (!isNaN(value) && value >= 0 && Number.isInteger(value)) {
       this.updateElement({
@@ -378,7 +378,7 @@ export default class EditEventFormView extends AbstractStatefulView {
     });
   };
 
-  #handleOfferClick = (evt) => {
+  #offersListClickHandler = (evt) => {
     const label = evt.target.closest('.event__offer-label');
     if (!label) {
       return;
