@@ -8,7 +8,7 @@ import { sortFunctions } from '../utils/sort.js';
 import PointPresenter from './point-presenter.js';
 import NewPointPresenter from './new-point-presenter.js';
 import LoadingView from '../view/loading-view.js';
-import FailedLoadingView from '../view/failed-load-data-view.js';
+import FailedLoadingView from '../view/failed-loading-view.js';
 
 export default class TripPresenter {
   #newPointPresenter = null;

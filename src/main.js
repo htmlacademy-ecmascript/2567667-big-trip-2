@@ -1,5 +1,5 @@
 import TripApiService from './trip-api-service.js';
-import PointsModel from './model/points-model.js';
+import PointModel from './model/point-model.js';
 import FilterModel from './model/filter-model.js';
 import TripPresenter from './presenter/trip-presenter.js';
 import FilterPresenter from './presenter/filter-presenter.js';
@@ -11,7 +11,7 @@ const AUTHORIZATION = `Basic ${Math.random().toString(36).substring(2, 12)}`;
 const ENDPOINT = 'https://23.objects.htmlacademy.pro/big-trip';
 
 const apiService = new TripApiService(ENDPOINT, AUTHORIZATION);
-const pointsModel = new PointsModel(apiService);
+const pointsModel = new PointModel(apiService);
 const filterModel = new FilterModel();
 
 const headerElement = document.querySelector('.trip-main');
